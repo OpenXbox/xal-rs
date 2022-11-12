@@ -1,0 +1,10 @@
+[package]
+name = "xal"
+version = "0.1.0"
+edition = "2021"
+description = "Xbox Authentication library"
+license = "MIT"
+repository = "https://github.com/OpenXbox/xal-rs"
+homepage = "https://openxbox.org"
+
+[dependencies]
