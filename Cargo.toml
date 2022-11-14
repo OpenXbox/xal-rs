@@ -10,35 +10,28 @@ homepage = "https://openxbox.org"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+async-trait = "0.1.74"
 reqwest = { version = "0.11", features = ["json"] }
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 cvlib = "0.1.2"
 filetime_type = "0.1"
-base64 = "0.13.0"
 chrono = "0.4"
-josekit = "0.8"
-uuid = { version = "1", features = ["v4"] }
-oauth2 = "4.3"
-
-# common for bins
-tokio = { version = "1", features = ["full"], optional = true }
-
-# auth_webview
-tauri = { version = "1.1.1", optional = true }
-wry = { version = "0.21.1", optional = true }
+uuid = { version = "1", features = ["v4", "serde"] }
+thiserror = "1.0.37"
+url = "2.3.1"
+http = "0.2.9"
+log = "0.4.20"
+p256 = "0.13.2"
+base64ct = { version = "1.6.0", features = ["std"] }
+sha2 = "0.10.8"
+rand = "0.8.5"
+oauth2 = "4.4.2"
 
 [dev-dependencies]
 hex-literal = "0.3.4"
 
-[features]
-webview = ["dep:tauri", "dep:wry"]
-tokio = ["dep:tokio"]
-
-[[bin]]
-name = "auth-cli"
-required-features = ["tokio"]
-
-[[bin]]         
-name = "auth-webview"
-required-features = ["webview"]
+[workspace]
+members = [
+    "examples"
+]

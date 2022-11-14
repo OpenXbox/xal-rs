@@ -1,8 +1,29 @@
+#![warn(missing_docs)]
+#![deny(rustdoc::broken_intra_doc_links)]
+//! XAL - Xbox Live Authentication Library for Rust
+//!
+//! Features:
+//! - OAuth2 Authentication via SISU App-Flow - see [`crate::XalAuthenticator`]
+//! - HTTP Request Signing - see [`crate::RequestSigner`]
+//! - Extensions for Reqwest HTTP client library - see [`crate::extensions`]
+//!
+//! # Examples
+//!
+//! For advanced usage, see [`crate::XalAuthenticator`].
+
 pub use cvlib;
 pub use oauth2;
+pub use url;
 
-pub mod app_params;
-pub mod authenticator;
-pub mod models;
-pub mod request_signer;
-pub mod utils;
+mod authenticator;
+mod error;
+mod models;
+mod request_signer;
+
+pub mod extensions;
+pub mod flows;
+pub mod tokenstore;
+pub use authenticator::*;
+pub use error::Error;
+pub use models::*;
+pub use request_signer::*;
