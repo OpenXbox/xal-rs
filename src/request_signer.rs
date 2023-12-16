@@ -8,7 +8,7 @@ use crate::{
 };
 use base64ct::{self, Base64, Encoding};
 use chrono::prelude::*;
-use filetime_type::FileTime;
+use nt_time::FileTime;
 use log::warn;
 use p256::{
     ecdsa::{
@@ -332,7 +332,9 @@ impl RequestSigner {
     ) -> Result<XboxWebSignatureBytes, Error> {
         let signing_key: SigningKey = self.keypair.clone().into();
 
-        let filetime_bytes = FileTime::from(timestamp).filetime().to_be_bytes();
+        let filetime_bytes = FileTime::try_from(timestamp)
+            .map_err(|e|Error::GeneralError(format!("{e}")))?
+            .to_be_bytes();
         let signing_policy_version_bytes = signing_policy_version.to_be_bytes();
 
         // Assemble the message to sign
@@ -584,8 +586,8 @@ mod test {
     #[test]
     fn prehashed_data() {
         let signing_policy_version: i32 = 1;
-        let ts_bytes = FileTime::from(Utc.timestamp_opt(1586999965, 0).unwrap())
-            .filetime()
+        let ts_bytes = FileTime::try_from(Utc.timestamp_opt(1586999965, 0).unwrap())
+            .unwrap()
             .to_be_bytes();
 
         let message_data = RequestSigner::prehash_message_data(
