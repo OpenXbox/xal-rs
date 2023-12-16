@@ -123,7 +123,8 @@ impl AuthPromptData {
 
 /// Sisu Auth callback trait
 ///
-/// Used as an argument to [`XalAuthenticator.do_sisu_flow`](crate::XalAuthenticator#method.do_sisu_flow)
+/// Used as an argument to [`crate::flows::xbox_live_sisu_full_flow`]
+///
 ///
 /// # Examples
 ///

@@ -187,7 +187,7 @@ pub struct RequestSigner {
     pub keypair: SecretKey,
     /// Signing policy
     ///
-    /// Specific signing policies can be gathered by [`XalAuthenticator.get_endpoints(&self)`](crate::XalAuthenticator#method.get_endpoints)
+    /// Specific signing policies can be gathered by [`get_endpoints`]
     pub signing_policy: models::SigningPolicy,
 }
 

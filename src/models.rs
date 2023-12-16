@@ -54,7 +54,7 @@ pub enum SigningAlgorithm {
 /// Signing policy for HTTP request signing
 ///
 /// Info about used policy for domains / endpoints can be requested
-/// via [`XalAuthenticator.get_endpoints(&self)`](crate::XalAuthenticator#method.get_endpoints)
+/// via [`crate::request_signer::get_endpoints`].
 ///
 /// Utilized by [`crate::RequestSigner`]
 #[derive(Debug, PartialEq, Eq, Clone, Serialize, Deserialize)]
@@ -99,7 +99,7 @@ pub mod request {
 
     /// SISU Authentication request body
     ///
-    /// Used by [`XalAuthenticator.do_sisu_authentication(&mut self)`](crate::XalAuthenticator#method.do_sisu_authentication)
+    /// Used by [`crate::XalAuthenticator::sisu_authenticate`]
     #[derive(Debug, Serialize, Deserialize)]
     #[serde(rename_all = "PascalCase")]
     pub struct SisuAuthenticationRequest<'a> {
@@ -123,7 +123,7 @@ pub mod request {
 
     /// SISU Authorization request body
     ///
-    /// Used by [`XalAuthenticator.sisu_authorize(&mut self)`](crate::XalAuthenticator#method.sisu_authorize)
+    /// Used by [`crate::XalAuthenticator::sisu_authorize`]
     #[derive(Debug, Serialize, Deserialize)]
     #[serde(rename_all = "PascalCase")]
     pub struct SisuAuthorizationRequest<'a> {
@@ -139,7 +139,7 @@ pub mod request {
         pub site_name: &'a str,
         /// Session Id
         ///
-        /// Received by previous call on [`XalAuthenticator`](crate::XalAuthenticator#method.sisu_authenticate)
+        /// Received by previous call on [`crate::XalAuthenticator::sisu_authenticate`]
         #[serde(skip_serializing_if = "Option::is_none")]
         pub session_id: Option<String>,
         /// JWK proof key, related to HTTP request signing
