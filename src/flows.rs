@@ -226,8 +226,9 @@ impl AuthPromptCallback for CliCallbackHandler {
 pub async fn try_refresh_tokens_from_file(
     filepath: &str,
 ) -> Result<(XalAuthenticator, TokenStore), Error> {
-    let ts = TokenStore::load_from_file(filepath)?;
-    try_refresh_live_tokens_from_tokenstore(ts).await
+    let mut ts = TokenStore::load_from_file(filepath)?;
+    let authenticator = try_refresh_live_tokens_from_tokenstore(&mut ts).await?;
+    Ok((authenticator, ts))
 }
 
 /// Try to read tokens from the token store and refresh the Windows Live tokens if needed.
@@ -241,8 +242,8 @@ pub async fn try_refresh_tokens_from_file(
 /// If successful, a tuple of [`crate::XalAuthenticator`] and [`crate::tokenstore::TokenStore`]
 /// is returned. TokenStore will contain the refreshed `live_tokens`.
 pub async fn try_refresh_live_tokens_from_tokenstore(
-    mut ts: TokenStore,
-) -> Result<(XalAuthenticator, TokenStore), Error> {
+    ts: &mut TokenStore,
+) -> Result<XalAuthenticator, Error> {
     let mut authenticator = Into::<XalAuthenticator>::into(ts.clone());
 
     info!("Refreshing windows live tokens");
@@ -254,15 +255,15 @@ pub async fn try_refresh_live_tokens_from_tokenstore(
     debug!("Windows Live tokens: {:?}", refreshed_wl_tokens);
     ts.live_token = refreshed_wl_tokens.clone();
 
-    Ok((authenticator, ts))
+    Ok(authenticator)
 }
 
 /// Shorthand for Windows Live device code flow
 pub async fn ms_device_code_flow<S, SF>(
-    mut authenticator: XalAuthenticator,
+    authenticator: &mut XalAuthenticator,
     cb: impl AuthPromptCallback,
     sleep_fn: S,
-) -> Result<(XalAuthenticator, TokenStore), Error>
+) -> Result<TokenStore, Error>
 where
     S: Fn(std::time::Duration) -> SF,
     SF: std::future::Future<Output = ()>,
@@ -295,17 +296,17 @@ where
         updated: None,
     };
 
-    Ok((authenticator, ts))
+    Ok(ts)
 }
 
 /// Shorthand for Windows Live authorization flow
 /// - Depending on the argument `implicit` the
 /// methods `implicit grant` or `authorization code` are chosen
 pub async fn ms_authorization_flow(
-    mut authenticator: XalAuthenticator,
+    authenticator: &mut XalAuthenticator,
     cb: impl AuthPromptCallback,
     implicit: bool,
-) -> Result<(XalAuthenticator, TokenStore), Error> {
+) -> Result<TokenStore, Error> {
     trace!("Starting implicit authorization flow");
 
     let (url, state) =
@@ -349,14 +350,14 @@ pub async fn ms_authorization_flow(
         updated: None,
     };
 
-    Ok((authenticator, ts))
+    Ok(ts)
 }
 
 /// Shorthand for sisu authentication flow
 pub async fn xbox_live_sisu_full_flow(
-    mut authenticator: XalAuthenticator,
+    authenticator: &mut XalAuthenticator,
     callback: impl AuthPromptCallback,
-) -> Result<(XalAuthenticator, TokenStore), Error> {
+) -> Result<TokenStore, Error> {
     trace!("Getting device token");
     let device_token = authenticator.get_device_token().await?;
     debug!("Device token={:?}", device_token);
@@ -417,7 +418,7 @@ pub async fn xbox_live_sisu_full_flow(
         updated: None,
     };
 
-    Ok((authenticator, ts))
+    Ok(ts)
 }
 
 /// Implements the traditional Xbox Live authorization flow.
@@ -475,12 +476,12 @@ pub async fn xbox_live_sisu_full_flow(
 /// - Depending on the client an AccessToken prefix is necessary to have the User Token (XASU) request succeed
 /// - Success of authorizing (device, user, ?title?) tokens for XSTS relies on the target relying party
 pub async fn xbox_live_authorization_traditional_flow(
-    mut authenticator: XalAuthenticator,
+    authenticator: &mut XalAuthenticator,
     live_tokens: WindowsLiveTokens,
     xsts_relying_party: String,
     access_token_prefix: AccessTokenPrefix,
     request_title_token: bool,
-) -> Result<(XalAuthenticator, TokenStore), Error> {
+) -> Result<TokenStore, Error> {
     debug!("Windows live tokens={:?}", &live_tokens);
     trace!("Getting device token");
     let device_token = authenticator.get_device_token().await?;
@@ -530,14 +531,14 @@ pub async fn xbox_live_authorization_traditional_flow(
         updated: None,
     };
 
-    Ok((authenticator, ts))
+    Ok(ts)
 }
 
 /// bla
 pub async fn xbox_live_sisu_authorization_flow(
-    mut authenticator: XalAuthenticator,
+    authenticator: &mut XalAuthenticator,
     live_tokens: WindowsLiveTokens,
-) -> Result<(XalAuthenticator, TokenStore), Error> {
+) -> Result<TokenStore, Error> {
     debug!("Windows live tokens={:?}", &live_tokens);
     trace!("Getting device token");
     let device_token = authenticator.get_device_token().await?;
@@ -560,5 +561,5 @@ pub async fn xbox_live_sisu_authorization_flow(
         updated: None,
     };
 
-    Ok((authenticator, ts))
+    Ok(ts)
 }

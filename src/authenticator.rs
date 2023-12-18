@@ -390,7 +390,6 @@ impl XalAuthenticator {
     ///         redirect_uri: Some(RedirectUrl::new("https://login.live.com/oauth20_desktop.srf".into()).unwrap())
     ///     },
     ///     client_params::CLIENT_ANDROID(),
-    ///     None,
     ///     "RETAIL".into()
     /// );
     /// 
