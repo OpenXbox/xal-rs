@@ -3,13 +3,15 @@
 
 use crate::{
     error::Error,
+    extensions::JsonExDeserializeMiddleware,
     models::{self, SigningPolicy},
-    ProofKey, response::{self, TitleEndpointsResponse}, Constants, extensions::JsonExDeserializeMiddleware,
+    response::{self, TitleEndpointsResponse},
+    Constants, ProofKey,
 };
 use base64ct::{self, Base64, Encoding};
 use chrono::prelude::*;
-use nt_time::FileTime;
 use log::warn;
+use nt_time::FileTime;
 use p256::{
     ecdsa::{
         signature::hazmat::{PrehashSigner, PrehashVerifier},
@@ -17,7 +19,7 @@ use p256::{
     },
     SecretKey,
 };
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 use std::{
     convert::{TryFrom, TryInto},
@@ -333,7 +335,7 @@ impl RequestSigner {
         let signing_key: SigningKey = self.keypair.clone().into();
 
         let filetime_bytes = FileTime::try_from(timestamp)
-            .map_err(|e|Error::GeneralError(format!("{e}")))?
+            .map_err(|e| Error::GeneralError(format!("{e}")))?
             .to_be_bytes();
         let signing_policy_version_bytes = signing_policy_version.to_be_bytes();
 
@@ -443,8 +445,8 @@ pub async fn get_endpoints() -> Result<response::TitleEndpointsResponse, Error> 
 }
 
 /// Signature policy cache
-/// 
-/// 
+///
+///
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct SignaturePolicyCache {
     endpoints: TitleEndpointsResponse,
@@ -453,9 +455,7 @@ pub struct SignaturePolicyCache {
 impl SignaturePolicyCache {
     /// Create a new SignaturePolicyCache.
     pub fn new(endpoints: TitleEndpointsResponse) -> Self {
-        Self {
-            endpoints
-        }
+        Self { endpoints }
     }
 
     /// Retrieve the stored TitleEndpointsResponse.
@@ -464,46 +464,55 @@ impl SignaturePolicyCache {
     }
 
     /// Find the policy for the given URL.
-    /// 
+    ///
     /// If a matching policy is found, returns the corresponding SigningPolicy. Otherwise, returns None.
     pub fn find_policy_for_url(&self, url: &str) -> Result<Option<SigningPolicy>, Error> {
         let url = url::Url::parse(url)?;
-    
-        if !["http","https"].contains(&url.scheme()) {
-            return Err(Error::GeneralError(format!("Url with invalid protocol passed, expected http or https, url={url}")))
+
+        if !["http", "https"].contains(&url.scheme()) {
+            return Err(Error::GeneralError(format!(
+                "Url with invalid protocol passed, expected http or https, url={url}"
+            )));
         }
-    
-        let matching_endpoint = self.endpoints.end_points
+
+        let matching_endpoint = self
+            .endpoints
+            .end_points
             .iter()
             .filter(|e| {
-                e.protocol.eq_ignore_ascii_case(url.scheme()) &&
-                url.host_str().map(|host| {
-                    match e.host_type.as_str() {
-                        "fqdn" => host == e.host,
-                        "wildcard" => host.ends_with(e.host.trim_start_matches('*')),
-                        _ => false,
-                    }
-                }).unwrap_or(false) &&
-                e.path.as_ref().map(|path| url.path() == path).unwrap_or(true) &&
-                e.signature_policy_index.is_some()
+                e.protocol.eq_ignore_ascii_case(url.scheme())
+                    && url
+                        .host_str()
+                        .map(|host| match e.host_type.as_str() {
+                            "fqdn" => host == e.host,
+                            "wildcard" => host.ends_with(e.host.trim_start_matches('*')),
+                            _ => false,
+                        })
+                        .unwrap_or(false)
+                    && e.path
+                        .as_ref()
+                        .map(|path| url.path() == path)
+                        .unwrap_or(true)
+                    && e.signature_policy_index.is_some()
             })
             .max_by_key(|e| e.host.len());
-    
+
         match matching_endpoint {
             Some(ep) => {
                 println!("Identified Title endpoint={ep:?} for URL={url} {url:?}");
                 let policy_index = ep.signature_policy_index.unwrap() as usize;
-                let policy = self.endpoints
-                    .signature_policies
-                    .get(policy_index)
-                    .ok_or(Error::GeneralError(format!("SignaturePolicy at index {policy_index} not found!")))?;
-    
+                let policy = self.endpoints.signature_policies.get(policy_index).ok_or(
+                    Error::GeneralError(format!(
+                        "SignaturePolicy at index {policy_index} not found!"
+                    )),
+                )?;
+
                 Ok(Some(policy.to_owned()))
-            },
+            }
             None => {
                 warn!("No matched SigningPolicy for url={url:?} found");
                 Ok(None)
-            },
+            }
         }
     }
 }
@@ -532,27 +541,90 @@ mod test {
 
     #[test]
     fn find_matching_signing_policy() {
-        let policy_0: SigningPolicy = SigningPolicy { version: 1, supported_algorithms: vec![SigningAlgorithm::ES256], max_body_bytes: 8192 };
-        let policy_1: SigningPolicy = SigningPolicy { version: 1, supported_algorithms: vec![SigningAlgorithm::ES256], max_body_bytes: 4294967295 };
+        let policy_0: SigningPolicy = SigningPolicy {
+            version: 1,
+            supported_algorithms: vec![SigningAlgorithm::ES256],
+            max_body_bytes: 8192,
+        };
+        let policy_1: SigningPolicy = SigningPolicy {
+            version: 1,
+            supported_algorithms: vec![SigningAlgorithm::ES256],
+            max_body_bytes: 4294967295,
+        };
 
         let title_endpoints = serde_json::from_str::<response::TitleEndpointsResponse>(
-            include_str!("../testdata/title_endpoints.json")
-        ).unwrap();
+            include_str!("../testdata/title_endpoints.json"),
+        )
+        .unwrap();
 
         let cache = SignaturePolicyCache::new(title_endpoints);
 
-        assert!(cache.find_policy_for_url("https://unhandled.example.com").unwrap().is_none());
-        assert!(cache.find_policy_for_url("https://unhandled.microsoft.com").unwrap().is_none());
+        assert!(cache
+            .find_policy_for_url("https://unhandled.example.com")
+            .unwrap()
+            .is_none());
+        assert!(cache
+            .find_policy_for_url("https://unhandled.microsoft.com")
+            .unwrap()
+            .is_none());
 
-        assert_eq!(cache.find_policy_for_url("https://experimentation.xboxlive.com").unwrap().unwrap(), policy_0);
-        assert_eq!(cache.find_policy_for_url("https://xoobe.xboxlive.com").unwrap().unwrap(), policy_0);
-        assert_eq!(cache.find_policy_for_url("https://xaaa.bbtv.cn/xboxsms/OOBEService/AuthorizationStatus").unwrap().unwrap(), policy_0);
+        assert_eq!(
+            cache
+                .find_policy_for_url("https://experimentation.xboxlive.com")
+                .unwrap()
+                .unwrap(),
+            policy_0
+        );
+        assert_eq!(
+            cache
+                .find_policy_for_url("https://xoobe.xboxlive.com")
+                .unwrap()
+                .unwrap(),
+            policy_0
+        );
+        assert_eq!(
+            cache
+                .find_policy_for_url("https://xaaa.bbtv.cn/xboxsms/OOBEService/AuthorizationStatus")
+                .unwrap()
+                .unwrap(),
+            policy_0
+        );
 
-        assert_eq!(cache.find_policy_for_url("https://hello.experimentation.xboxlive.com").unwrap().unwrap(), policy_1);
-        assert_eq!(cache.find_policy_for_url("https://data-vef.xboxlive.com").unwrap().unwrap(), policy_1);
-        assert_eq!(cache.find_policy_for_url("https://settings.xboxlive.com").unwrap().unwrap(), policy_1);
-        assert_eq!(cache.find_policy_for_url("https://device.mgt.xboxlive.com").unwrap().unwrap(), policy_1);
-        assert_eq!(cache.find_policy_for_url("https://device.mgt.xboxlive.com/devices/current/unlock").unwrap().unwrap(), policy_1);
+        assert_eq!(
+            cache
+                .find_policy_for_url("https://hello.experimentation.xboxlive.com")
+                .unwrap()
+                .unwrap(),
+            policy_1
+        );
+        assert_eq!(
+            cache
+                .find_policy_for_url("https://data-vef.xboxlive.com")
+                .unwrap()
+                .unwrap(),
+            policy_1
+        );
+        assert_eq!(
+            cache
+                .find_policy_for_url("https://settings.xboxlive.com")
+                .unwrap()
+                .unwrap(),
+            policy_1
+        );
+        assert_eq!(
+            cache
+                .find_policy_for_url("https://device.mgt.xboxlive.com")
+                .unwrap()
+                .unwrap(),
+            policy_1
+        );
+        assert_eq!(
+            cache
+                .find_policy_for_url("https://device.mgt.xboxlive.com/devices/current/unlock")
+                .unwrap()
+                .unwrap(),
+            policy_1
+        );
     }
 
     #[test]

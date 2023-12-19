@@ -1,9 +1,9 @@
 //! Authentication functionality.
-use crate::{RequestSigner, AccessTokenPrefix};
 use crate::extensions::{
     CorrelationVectorReqwestBuilder, JsonExDeserializeMiddleware, LoggingReqwestRequestHandler,
     LoggingReqwestResponseHandler, SigningReqwestBuilder,
 };
+use crate::{AccessTokenPrefix, RequestSigner};
 
 use crate::request::{
     XADProperties, XASTProperties, XASUProperties, XSTSProperties, XTokenRequest,
@@ -31,50 +31,54 @@ pub struct Constants;
 
 impl Constants {
     /// Redirect URL for implicit / authorization code flow
-    pub const OAUTH20_DESKTOP_REDIRECT_URL: &str = "https://login.live.com/oauth20_desktop.srf";
+    pub const OAUTH20_DESKTOP_REDIRECT_URL: &'static str =
+        "https://login.live.com/oauth20_desktop.srf";
     /// live.com Authorization URL
-    pub const OAUTH20_AUTHORIZE_URL: &str = "https://login.live.com/oauth20_authorize.srf";
+    pub const OAUTH20_AUTHORIZE_URL: &'static str = "https://login.live.com/oauth20_authorize.srf";
     /// live.com Device Authorization URL (Device Code flow)
-    pub const OAUTH20_DEVICE_AUTHORIZE_URL: &str = "https://login.live.com/oauth20_connect.srf";
+    pub const OAUTH20_DEVICE_AUTHORIZE_URL: &'static str =
+        "https://login.live.com/oauth20_connect.srf";
     /// live.com Remote Device Authorization URL (Device Code flow) - to assemble device authorization URL incl. OTC
-    pub const OAUTH20_DEVICE_REMOTEAUTHORIZE_URL: &str =
+    pub const OAUTH20_DEVICE_REMOTEAUTHORIZE_URL: &'static str =
         "https://login.live.com/oauth20_remoteconnect.srf";
     /// live.com Token URL
-    pub const OAUTH20_TOKEN_URL: &str = "https://login.live.com/oauth20_token.srf";
+    pub const OAUTH20_TOKEN_URL: &'static str = "https://login.live.com/oauth20_token.srf";
 
     /// live.com authentication finish URL
     /// Called f.e. on end of device code flow
-    pub const OAUTH20_FINISH_FLOW_URL: &str = "https://login.live.com/ppsecure/post.srf";
+    pub const OAUTH20_FINISH_FLOW_URL: &'static str = "https://login.live.com/ppsecure/post.srf";
 
     /// Xbox Title endpoints URL, returns signing policies for supported domains/endpoints
-    pub const XBOX_TITLE_ENDPOINTS_URL: &str =
+    pub const XBOX_TITLE_ENDPOINTS_URL: &'static str =
         "https://title.mgt.xboxlive.com/titles/default/endpoints";
 
     /// Xbox Sisu authentication endpoint
-    pub const XBOX_SISU_AUTHENTICATE_URL: &str = "https://sisu.xboxlive.com/authenticate";
+    pub const XBOX_SISU_AUTHENTICATE_URL: &'static str = "https://sisu.xboxlive.com/authenticate";
     /// Xbox Sisu authorization endpoint
-    pub const XBOX_SISU_AUTHORIZE_URL: &str = "https://sisu.xboxlive.com/authorize";
+    pub const XBOX_SISU_AUTHORIZE_URL: &'static str = "https://sisu.xboxlive.com/authorize";
 
     /// Xbox Device Authentication endpoint (XASD token)
-    pub const XBOX_DEVICE_AUTH_URL: &str = "https://device.auth.xboxlive.com/device/authenticate";
+    pub const XBOX_DEVICE_AUTH_URL: &'static str =
+        "https://device.auth.xboxlive.com/device/authenticate";
     /// Xbox Title Authentication endpoint (XAST token)
-    pub const XBOX_TITLE_AUTH_URL: &str = "https://title.auth.xboxlive.com/title/authenticate";
+    pub const XBOX_TITLE_AUTH_URL: &'static str =
+        "https://title.auth.xboxlive.com/title/authenticate";
     /// Xbox User Authentication endpoint (XASU token)
-    pub const XBOX_USER_AUTH_URL: &str = "https://user.auth.xboxlive.com/user/authenticate";
+    pub const XBOX_USER_AUTH_URL: &'static str = "https://user.auth.xboxlive.com/user/authenticate";
     /// Xbox Service Authorization endpoint (XSTS token)
-    pub const XBOX_XSTS_AUTH_URL: &str = "https://xsts.auth.xboxlive.com/xsts/authorize";
+    pub const XBOX_XSTS_AUTH_URL: &'static str = "https://xsts.auth.xboxlive.com/xsts/authorize";
 
     /// Default Xbox Live authorization scope
-    pub const SCOPE_SERVICE_USER_AUTH: &str = "service::user.auth.xboxlive.com::MBI_SSL";
+    pub const SCOPE_SERVICE_USER_AUTH: &'static str = "service::user.auth.xboxlive.com::MBI_SSL";
     /// Signin Xbox Live authorization scope (used for custom Azure apps)
-    pub const SCOPE_XBL_SIGNIN: &str = "Xboxlive.signin";
+    pub const SCOPE_XBL_SIGNIN: &'static str = "Xboxlive.signin";
     /// Offline access Xbox Live authorization scope (used for custom Azure apps)
-    pub const SCOPE_XBL_OFFLINE_ACCESS: &str = "Xboxlive.offline_access";
+    pub const SCOPE_XBL_OFFLINE_ACCESS: &'static str = "Xboxlive.offline_access";
 
     /// Relying Party Auth Xbox Live
-    pub const RELYING_PARTY_AUTH_XBOXLIVE: &str = "http://auth.xboxlive.com";
+    pub const RELYING_PARTY_AUTH_XBOXLIVE: &'static str = "http://auth.xboxlive.com";
     /// Relying Party Xbox Live
-    pub const RELYING_PARTY_XBOXLIVE: &str = "http://xboxlive.com";
+    pub const RELYING_PARTY_XBOXLIVE: &'static str = "http://xboxlive.com";
 }
 
 /// XAL Authenticator
@@ -140,7 +144,7 @@ impl XalAuthenticator {
     /// ```
     /// use xal::XalAuthenticator;
     /// use xal::oauth2::UserCode;
-    /// 
+    ///
     /// let user_code = UserCode::new("abc123".to_string());
     /// let verification_uri = XalAuthenticator::get_device_code_verification_uri(&user_code);
     /// println!("{:?}", verification_uri);
@@ -178,7 +182,7 @@ impl XalAuthenticator {
             .query_pairs()
             .map(|(k, v)| (k.to_string(), v.to_string()))
             .collect();
-    
+
         if let Some(state) = expected_state {
             if let Some(state_resp) = query_map.get("state") {
                 if state.secret() != state_resp {
@@ -194,24 +198,23 @@ impl XalAuthenticator {
                 ));
             }
         }
-    
+
         if let Some(error) = query_map.get("error") {
-            let error_resp: StandardErrorResponse<BasicErrorResponseType> = serde_json::from_value(
-                serde_json::json!({
+            let error_resp: StandardErrorResponse<BasicErrorResponseType> =
+                serde_json::from_value(serde_json::json!({
                     "error": error,
                     "error_description": query_map.get("error_description").map(|x| x.to_string()),
                     "error_uri": query_map.get("error_uri").map(|x| x.to_string()),
-                }),
-            )
-            .map_err(|e|Error::JsonError(e))?;
-    
+                }))
+                .map_err(Error::JsonError)?;
+
             return Err(Error::OAuthExecutionError(
                 oauth2::RequestTokenError::ServerResponse(error_resp),
             ));
         } else if let Some(code) = query_map.get("code") {
             return Ok(AuthorizationCode::new(code.to_owned()));
         }
-    
+
         Err(Error::GeneralError(
             "Response neither had 'code' nor 'error' field".into(),
         ))
@@ -237,7 +240,7 @@ impl XalAuthenticator {
     /// use xal::XalAuthenticator;
     /// use xal::oauth2::CsrfToken;
     /// use xal::url::Url;
-    /// 
+    ///
     /// let url = Url::parse("https://example.com/callback#access_token=token123&token_type=Bearer&expires_in=3600&state=123abc")
     ///     .unwrap();
     /// let state = "123abc".to_string();
@@ -252,10 +255,10 @@ impl XalAuthenticator {
         let fragment = url
             .fragment()
             .ok_or(Error::InvalidRedirectUrl("No fragment found".to_string()))?;
-    
+
         let mut kv_pairs: HashMap<String, serde_json::Value> = HashMap::new();
         let mut state_resp = None;
-    
+
         for (k, v) in form_urlencoded::parse(fragment.as_bytes()) {
             match k.as_ref() {
                 "expires_in" => {
@@ -270,7 +273,7 @@ impl XalAuthenticator {
                 }
             }
         }
-    
+
         if let Some(state) = expected_state {
             if let Some(s) = state_resp {
                 if state.secret() != &s.to_string() {
@@ -283,7 +286,7 @@ impl XalAuthenticator {
                 return Err(Error::InvalidRedirectUrl("No state found".to_string()));
             }
         }
-    
+
         Ok(serde_json::from_value(json!(kv_pairs))?)
     }
 }
@@ -371,13 +374,13 @@ impl XalAuthenticator {
     ///
     /// Defining a `redirect_url` in [`crate::XalAppParameters`] is mandatory
     /// for this authentication flow
-    /// 
+    ///
     /// # Examples
-    /// 
+    ///
     /// ```
     /// use xal::{XalAuthenticator, XalAppParameters, client_params};
     /// use xal::oauth2::{RedirectUrl, Scope};
-    /// 
+    ///
     /// # async fn demo_code() {
     /// let mut authenticator = XalAuthenticator::new(
     ///     XalAppParameters {
@@ -392,10 +395,10 @@ impl XalAuthenticator {
     ///     client_params::CLIENT_ANDROID(),
     ///     "RETAIL".into()
     /// );
-    /// 
+    ///
     /// let (url, state) = authenticator.get_authorization_url(false)
     ///     .unwrap();
-    /// 
+    ///
     /// assert!(url.as_str().starts_with("https://login.live.com/oauth20_desktop.srf"));
     /// # }
     /// ```
@@ -422,10 +425,10 @@ impl XalAuthenticator {
     }
 
     /// Initiates the Device Code Authentication Flow.
-    /// 
+    ///
     /// After presenting the returned [`crate::oauth2:: EndUserVerificationUrl`] and [`crate::oauth2::UserCode`]
     /// to the user, call `poll_device_code_auth`.
-    /// 
+    ///
     /// You can transform the returned value into [`crate::oauth2::VerificationUriComplete`] by calling `get_device_code_verification_uri`.
     pub async fn initiate_device_code_auth(
         &mut self,
@@ -441,11 +444,11 @@ impl XalAuthenticator {
     }
 
     /// Poll for device code.
-    /// 
+    ///
     /// To be called after presenting the result of `start_device_code_auth` to the user.
-    /// 
+    ///
     /// # Arguments
-    /// 
+    ///
     /// - `sleep_fn` is the impl of an async sleep function
     pub async fn poll_device_code_auth<S, SF>(
         &mut self,
@@ -464,16 +467,16 @@ impl XalAuthenticator {
     }
 
     /// Exchange OAuth2 Authorization Token for Windows Live Access Token.
-    /// 
+    ///
     /// This method utilizes the PKCE extension to securely obtain an access token from the Microsoft Identity Platform.
-    /// 
+    ///
     /// # Arguments
-    /// 
+    ///
     /// * `authorization_code` - The authorization code received from the user authentication step.
     /// * `code_verifier` - The code verifier that was generated earlier in the PKCE process. This parameter is optional.
-    /// 
+    ///
     /// # Examples
-    /// 
+    ///
     /// ```
     /// use xal::XalAuthenticator;
     /// use xal::oauth2::{AuthorizationCode, TokenResponse};
@@ -483,7 +486,7 @@ impl XalAuthenticator {
     /// let live_tokens = authenticator
     ///     .exchange_code_for_token(code, None)
     ///     .await?;
-    /// 
+    ///
     /// assert!(!live_tokens.access_token().secret().is_empty());
     /// # Ok(())
     /// # }
@@ -495,8 +498,7 @@ impl XalAuthenticator {
     ) -> Result<response::WindowsLiveTokens, Error> {
         let client = self.oauth_client(None)?;
 
-        let mut req = client
-            .exchange_code(authorization_code);
+        let mut req = client.exchange_code(authorization_code);
 
         if let Some(redirect_url) = &self.app_params.redirect_uri {
             req = req.set_redirect_uri(std::borrow::Cow::Owned(redirect_url.clone()));
@@ -512,16 +514,16 @@ impl XalAuthenticator {
     }
 
     /// Refresh an OAuth2 Refresh Token for specific scope(s) and deserialize into custom response type
-    /// 
+    ///
     /// This is used when the token response does not align with the standard.
-    /// 
+    ///
     /// # Examples
-    /// 
+    ///
     /// ```
     /// use xal::XalAuthenticator;
     /// use xal::oauth2::{RefreshToken, Scope};
     /// use serde::{Deserialize, Serialize};
-    /// 
+    ///
     /// // Custom JSON response body
     /// #[derive(Debug, Serialize, Deserialize)]
     /// pub struct XCloudTokenResponse {
@@ -529,7 +531,7 @@ impl XalAuthenticator {
     ///     pub refresh_token: String,
     ///     pub user_id: String,
     /// }
-    /// 
+    ///
     /// # async fn demo_code() {
     /// # let refresh_token = RefreshToken::new("...refresh token...".into());
     /// let mut authenticator = XalAuthenticator::default();
@@ -538,7 +540,7 @@ impl XalAuthenticator {
     ///         "service::http://Passport.NET/purpose::PURPOSE_XBOX_CLOUD_CONSOLE_TRANSFER_TOKEN".into()
     ///     )
     /// ];
-    /// 
+    ///
     /// let token_response = authenticator
     ///     .refresh_token_for_scope::<XCloudTokenResponse>(
     ///         &refresh_token,
@@ -548,7 +550,7 @@ impl XalAuthenticator {
     ///     .unwrap();
     /// # }
     /// ```
-    /// 
+    ///
     pub async fn refresh_token_for_scope<T>(
         &mut self,
         refresh_token: &RefreshToken,
@@ -571,22 +573,22 @@ impl XalAuthenticator {
             Err(RequestTokenError::Parse(_, data)) => {
                 serde_json::from_slice(&data).map_err(std::convert::Into::into)
             }
-            Err(e) => Err(e).map_err(std::convert::Into::into),
+            Err(e) => Err(std::convert::Into::into(e)),
         }
     }
 
     /// Refresh a Windows Live Refresh & Access Token by providing a Refresh Token
-    /// 
+    ///
     /// # Arguments
-    /// 
+    ///
     /// * `refresh_token` - The refresh token to use for obtaining a new access token
-    /// 
+    ///
     /// # Examples
-    /// 
+    ///
     /// ```
     /// use xal::XalAuthenticator;
     /// use xal::oauth2::RefreshToken;
-    /// 
+    ///
     /// let authenticator = XalAuthenticator::default();
     /// let refresh_token = RefreshToken::new("old_refresh_token".to_string());
     /// /*
@@ -594,7 +596,7 @@ impl XalAuthenticator {
     ///     .refresh_token(&refresh_token)
     ///     .await
     ///     .unwrap();
-    /// 
+    ///
     /// println!("Refreshed tokens: {refreshed_live_tokens:?}");
     /// */
     /// ```
@@ -610,25 +612,25 @@ impl XalAuthenticator {
 /// Xbox Live token functionality
 impl XalAuthenticator {
     /// Initiate authentication via SISU flow
-    /// 
+    ///
     /// # Parameters
-    /// 
+    ///
     /// * `device_token`: A [`response::DeviceToken`] object representing the device token.
     /// * `code_challenge`: A [`PkceCodeChallenge`] object representing the code challenge.
     /// * `state`: A [`CsrfToken`] object representing the CSRF token.
-    /// 
+    ///
     /// # Errors
-    /// 
+    ///
     /// * If `device_token` is missing.
     /// * If `redirect_uri` is missing.
     /// * If the Sisu Authentication request fails.
     ///
     /// # Examples
-    /// 
+    ///
     /// ```
     /// use xal::XalAuthenticator;
     /// use xal::url::Url;
-    /// 
+    ///
     /// # async fn demo_code() {
     /// let mut authenticator = XalAuthenticator::default();
     /// let state = XalAuthenticator::generate_random_state();
@@ -636,7 +638,7 @@ impl XalAuthenticator {
     /// let device_token = authenticator.get_device_token()
     ///     .await
     ///     .unwrap();
-    /// 
+    ///
     /// let (resp, session_id) = authenticator.sisu_authenticate(
     ///     &device_token,
     ///     &pkce_challenge,
@@ -644,23 +646,23 @@ impl XalAuthenticator {
     /// )
     /// .await
     /// .unwrap();
-    /// 
+    ///
     /// println!(
     ///     "Visit this url and pass back the redirect url containing the authorization code {}",
     ///     resp.msa_oauth_redirect
     /// );
     /// let redirect_url = Url::parse("https://example.com/?code=123").unwrap();
-    /// 
+    ///
     /// let authorization_code = XalAuthenticator::parse_authorization_code_response(
     ///     &redirect_url, Some(&state)
     /// ).unwrap();
-    /// 
+    ///
     /// let live_tokens = authenticator.exchange_code_for_token(
     ///     authorization_code, Some(pkce_verifier)
     /// )
     /// .await
     /// .unwrap();
-    /// 
+    ///
     /// let sisu_authorization_resp = authenticator.sisu_authorize(
     ///     &live_tokens, &device_token, Some(session_id)
     /// )
@@ -668,9 +670,9 @@ impl XalAuthenticator {
     /// .unwrap();
     /// # }
     /// ```
-    /// 
+    ///
     /// # Notes
-    /// 
+    ///
     /// It is mandatory to have [`XalAppParameters`] setup with a `redirect_uri` and `title_id`.
     pub async fn sisu_authenticate(
         &mut self,
@@ -684,9 +686,13 @@ impl XalAuthenticator {
         ),
         Error,
     > {
-        let title_id = self.app_params.title_id
+        let title_id = self
+            .app_params
+            .title_id
             .clone()
-            .ok_or(Error::InvalidRequest("Sisu authentication not possible without title Id (check XalAppParameters)".into()))?;
+            .ok_or(Error::InvalidRequest(
+                "Sisu authentication not possible without title Id (check XalAppParameters)".into(),
+            ))?;
 
         let json_body = request::SisuAuthenticationRequest {
             app_id: &self.app_params.app_id,
@@ -732,16 +738,16 @@ impl XalAuthenticator {
     }
 
     /// Authorize via SISU flow after completing OAuth2 Authentication
-    /// 
+    ///
     /// This function handles the second step of the SISU flow.
     /// The response from the server contains a collection of tokens, which can be used for further interaction with the Xbox Live service.
-    /// 
+    ///
     /// # Examples
-    /// 
+    ///
     /// ```
     /// use xal::XalAuthenticator;
     /// use xal::url::Url;
-    /// 
+    ///
     /// # async fn demo_code() {
     /// let mut authenticator = XalAuthenticator::default();
     /// let state = XalAuthenticator::generate_random_state();
@@ -749,7 +755,7 @@ impl XalAuthenticator {
     /// let device_token = authenticator.get_device_token()
     ///     .await
     ///     .unwrap();
-    /// 
+    ///
     /// let (resp, session_id) = authenticator.sisu_authenticate(
     ///     &device_token,
     ///     &pkce_challenge,
@@ -757,23 +763,23 @@ impl XalAuthenticator {
     /// )
     /// .await
     /// .unwrap();
-    /// 
+    ///
     /// println!(
     ///     "Visit this url and pass back the redirect url containing the authorization code {}",
     ///     resp.msa_oauth_redirect
     /// );
     /// let redirect_url = Url::parse("https://example.com/?code=123").unwrap();
-    /// 
+    ///
     /// let authorization_code = XalAuthenticator::parse_authorization_code_response(
     ///     &redirect_url, Some(&state)
     /// ).unwrap();
-    /// 
+    ///
     /// let live_tokens = authenticator.exchange_code_for_token(
     ///     authorization_code, Some(pkce_verifier)
     /// )
     /// .await
     /// .unwrap();
-    /// 
+    ///
     /// let sisu_authorization_resp = authenticator.sisu_authorize(
     ///     &live_tokens, &device_token, Some(session_id)
     /// )
@@ -818,29 +824,29 @@ impl XalAuthenticator {
     /// This method returns an `Error` if the POST request fails or the JSON response cannot be parsed.
     ///
     /// # Examples
-    /// 
+    ///
     /// ```
     /// # async fn demo_code() {
     /// use xal::XalAuthenticator;
-    /// 
+    ///
     /// let mut authenticator = XalAuthenticator::default();
     /// let device_token = authenticator.get_device_token()
     ///     .await
     ///     .unwrap();
-    /// 
+    ///
     /// assert!(!device_token.token.is_empty());
     /// # }
     /// ```
-    /// 
+    ///
     /// # Notes
-    /// 
+    ///
     /// Device tokens can only be requested for devices of the following type:
-    /// 
+    ///
     /// - Android
     /// - iOS
     /// - Nintendo
     /// - Win32
-    /// 
+    ///
     /// Xbox devices use a much more sophisticated request method.
     pub async fn get_device_token(&mut self) -> Result<response::DeviceToken, Error> {
         let device_id = self.device_id.hyphenated().to_string();
@@ -882,7 +888,7 @@ impl XalAuthenticator {
     ///
     /// This method sends a POST request to the Xbox Live User Authentication URL, using the provided
     /// `access_token` and `prefix`.
-    /// 
+    ///
     /// The resulting User Token is then used to retrieve the final *XSTS* token to access Xbox Live services.
     ///
     /// # Arguments
@@ -934,7 +940,7 @@ impl XalAuthenticator {
     ///
     /// This method sends a POST request to the Xbox Live Title Authentication URL, using the provided
     /// `access_token` and `device_token`.
-    /// 
+    ///
     /// The resulting Title Token is then used to retrieve the final *XSTS* token to access Xbox Live services.
     ///
     /// # Arguments
@@ -983,7 +989,7 @@ impl XalAuthenticator {
     ///
     /// This method sends a POST request to the Xbox Live XSTS Authentication URL, using the provided `relying_party`
     /// and optionally `device_token`, `title_token`, and `user_token`.
-    /// 
+    ///
     /// The resulting XSTS token can be used to authenticate with various Xbox Live services.
     ///
     /// # Arguments
@@ -1041,9 +1047,9 @@ impl XalAuthenticator {
 
 #[cfg(test)]
 mod test {
-    use std::time::Duration;
-    use oauth2::{basic::BasicTokenType, RequestTokenError};
     use super::*;
+    use oauth2::{basic::BasicTokenType, RequestTokenError};
+    use std::time::Duration;
 
     fn parse_authorization_code_response(
         url: &'static str,

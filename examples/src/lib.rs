@@ -1,7 +1,10 @@
 use clap::{Parser, ValueEnum};
 use env_logger::Env;
 use log::info;
-use xal::{flows, Error, XalAppParameters, XalAuthenticator, XalClientParameters, AccessTokenPrefix, Constants};
+use xal::{
+    flows, tokenstore::TokenStore, AccessTokenPrefix, Constants, Error, XalAppParameters,
+    XalAuthenticator, XalClientParameters,
+};
 
 /// Common cli arguments
 #[derive(Parser, Debug)]
@@ -54,13 +57,12 @@ pub enum AuthFlow {
 
 pub async fn auth_main_default(
     access_token_prefix: AccessTokenPrefix,
-    auth_cb: impl flows::AuthPromptCallback
-) -> Result<(), Error> {
+    auth_cb: impl flows::AuthPromptCallback,
+) -> Result<TokenStore, Error> {
     auth_main(
         XalAppParameters::default(),
         XalClientParameters::default(),
         "RETAIL".to_owned(),
-        Constants::RELYING_PARTY_XBOXLIVE.into(),
         access_token_prefix,
         auth_cb,
     )
@@ -72,31 +74,28 @@ pub async fn auth_main(
     app_params: XalAppParameters,
     client_params: XalClientParameters,
     sandbox_id: String,
-    xsts_relying_party: String,
     access_token_prefix: AccessTokenPrefix,
     auth_cb: impl flows::AuthPromptCallback,
-) -> Result<(), Error> {
+) -> Result<TokenStore, Error> {
     let args = handle_args();
 
-    let mut ts = match flows::try_refresh_tokens_from_file(&args.token_filepath).await {
+    let mut ts = match flows::try_refresh_live_tokens_from_file(&args.token_filepath).await {
         Ok((mut authenticator, ts)) => {
             info!("Tokens refreshed succesfully, proceeding with Xbox Live Authorization");
             match args.flow {
                 AuthFlow::Sisu => {
                     info!("Authorize and gather rest of xbox live tokens via sisu");
-                    flows::xbox_live_sisu_authorization_flow(
-                        &mut authenticator, ts.live_token
-                    )
-                    .await?
-                },
+                    flows::xbox_live_sisu_authorization_flow(&mut authenticator, ts.live_token)
+                        .await?
+                }
                 _ => {
                     info!("Authorize Xbox Live the traditional way, via individual requests");
                     flows::xbox_live_authorization_traditional_flow(
                         &mut authenticator,
                         ts.live_token,
-                        xsts_relying_party,
+                        Constants::RELYING_PARTY_XBOXLIVE.into(),
                         access_token_prefix,
-                        false
+                        false,
                     )
                     .await?
                 }
@@ -108,9 +107,12 @@ pub async fn auth_main(
 
             info!("Authentication via flow={:?}", args.flow);
             let ts = match args.flow {
-                AuthFlow::Sisu => flows::xbox_live_sisu_full_flow(&mut authenticator, auth_cb).await?,
+                AuthFlow::Sisu => {
+                    flows::xbox_live_sisu_full_flow(&mut authenticator, auth_cb).await?
+                }
                 AuthFlow::DeviceCode => {
-                    flows::ms_device_code_flow(&mut authenticator, auth_cb, tokio::time::sleep).await?
+                    flows::ms_device_code_flow(&mut authenticator, auth_cb, tokio::time::sleep)
+                        .await?
                 }
                 AuthFlow::Implicit => {
                     flows::ms_authorization_flow(&mut authenticator, auth_cb, true).await?
@@ -129,12 +131,12 @@ pub async fn auth_main(
                     flows::xbox_live_authorization_traditional_flow(
                         &mut authenticator,
                         ts.live_token,
-                        xsts_relying_party,
+                        Constants::RELYING_PARTY_XBOXLIVE.into(),
                         access_token_prefix,
                         false,
                     )
                     .await?
-                },
+                }
             }
         }
     };
@@ -142,5 +144,5 @@ pub async fn auth_main(
     ts.update_timestamp();
     ts.save_to_file(&args.token_filepath)?;
 
-    Ok(())
+    Ok(ts)
 }

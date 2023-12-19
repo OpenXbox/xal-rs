@@ -312,7 +312,7 @@ pub mod response {
                 issue_instant: "2020-12-15T00:00:00.0000000Z".into(),
                 not_after: "2199-12-15T00:00:00.0000000Z".into(),
                 token: s.to_owned(),
-                display_claims: None
+                display_claims: None,
             }
         }
     }
@@ -405,9 +405,9 @@ pub mod response {
 }
 
 /// Access Token prefix
-/// 
+///
 /// Relevant for fetching the UserToken
-/// 
+///
 /// Exact conditions are still unknown, when to use which format.
 #[derive(Debug, Eq, PartialEq, Clone)]
 pub enum AccessTokenPrefix {
@@ -416,7 +416,7 @@ pub enum AccessTokenPrefix {
     /// Prefix access token with "t="
     T,
     /// Use token string as-is
-    None
+    None,
 }
 
 impl ToString for AccessTokenPrefix {
@@ -455,7 +455,7 @@ impl FromStr for DeviceType {
             "ios" => DeviceType::IOS,
             "win32" => DeviceType::WIN32,
             "nintendo" => DeviceType::NINTENDO,
-            val => DeviceType::Custom(val.to_owned())
+            val => DeviceType::Custom(val.to_owned()),
         };
         Ok(enm)
     }
@@ -496,8 +496,8 @@ pub struct XalAppParameters {
 pub mod app_params {
     use oauth2::{RedirectUrl, Scope};
 
-    use crate::Constants;
     use super::XalAppParameters;
+    use crate::Constants;
 
     /// Xbox Beta App
     pub fn APP_XBOX_BETA() -> XalAppParameters {
@@ -583,7 +583,9 @@ pub mod app_params {
             app_id: "00000000402b5328".into(),
             title_id: None,
             auth_scopes: vec![Scope::new(Constants::SCOPE_SERVICE_USER_AUTH.to_string())],
-            redirect_uri: None,
+            redirect_uri: Some(
+                RedirectUrl::new(crate::Constants::OAUTH20_DESKTOP_REDIRECT_URL.into()).unwrap(),
+            ),
         }
     }
 
@@ -593,7 +595,9 @@ pub mod app_params {
             app_id: "00000000441cc96b".into(),
             title_id: Some("2047319603".into()),
             auth_scopes: vec![Scope::new(Constants::SCOPE_SERVICE_USER_AUTH.to_string())],
-            redirect_uri: None,
+            redirect_uri: Some(
+                RedirectUrl::new(crate::Constants::OAUTH20_DESKTOP_REDIRECT_URL.into()).unwrap(),
+            ),
         }
     }
 
@@ -603,7 +607,9 @@ pub mod app_params {
             app_id: "0000000048183522".into(),
             title_id: Some("1739947436".into()),
             auth_scopes: vec![Scope::new(Constants::SCOPE_SERVICE_USER_AUTH.to_string())],
-            redirect_uri: None,
+            redirect_uri: Some(
+                RedirectUrl::new(crate::Constants::OAUTH20_DESKTOP_REDIRECT_URL.into()).unwrap(),
+            ),
         }
     }
 
@@ -613,7 +619,9 @@ pub mod app_params {
             app_id: "000000004c17c01a".into(),
             title_id: Some("1810924247".into()),
             auth_scopes: vec![Scope::new(Constants::SCOPE_SERVICE_USER_AUTH.to_string())],
-            redirect_uri: None,
+            redirect_uri: Some(
+                RedirectUrl::new(crate::Constants::OAUTH20_DESKTOP_REDIRECT_URL.into()).unwrap(),
+            ),
         }
     }
 

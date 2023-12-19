@@ -1,11 +1,16 @@
 use std::str::from_utf8;
 
 use async_trait::async_trait;
-use tokio::{net::TcpListener, io::{AsyncReadExt, AsyncWriteExt}};
+use tokio::{
+    io::{AsyncReadExt, AsyncWriteExt},
+    net::TcpListener,
+};
 use xal::{
+    client_params::CLIENT_ANDROID,
     flows::{AuthPromptCallback, AuthPromptData},
+    oauth2::{RedirectUrl, Scope},
     url::Url,
-    Error, client_params::CLIENT_ANDROID, Constants, XalAppParameters, oauth2::{Scope, RedirectUrl, ResourceOwnerUsername, ResourceOwnerPassword}, XalAuthenticator,
+    Error, XalAppParameters,
 };
 use xal_examples::auth_main;
 
@@ -40,10 +45,13 @@ impl AuthPromptCallback for HttpCallbackHandler {
         let http_req = from_utf8(&buf)?;
         println!("HTTP REQ: {http_req}");
 
-        let path = http_req.split(" ").nth(1).unwrap();
+        let path = http_req.split(' ').nth(1).unwrap();
         println!("Path: {path}");
 
-        Ok(Some(Url::parse(&format!("{}{}", self.redirect_url_base, path))?))
+        Ok(Some(Url::parse(&format!(
+            "{}{}",
+            self.redirect_url_base, path
+        ))?))
     }
 }
 
@@ -54,7 +62,8 @@ async fn main() -> Result<(), Error> {
             app_id: "388ea51c-0b25-4029-aae2-17df49d23905".into(),
             title_id: None,
             auth_scopes: vec![
-                Scope::new("Xboxlive.signin".into()), Scope::new("Xboxlive.offline_access".into())
+                Scope::new("Xboxlive.signin".into()),
+                Scope::new("Xboxlive.offline_access".into()),
             ],
             redirect_uri: Some(
                 RedirectUrl::new("http://localhost:8080/auth/callback".into()).unwrap(),
@@ -62,11 +71,14 @@ async fn main() -> Result<(), Error> {
         },
         CLIENT_ANDROID(),
         "RETAIL".into(),
-        Constants::RELYING_PARTY_XBOXLIVE.into(),
         xal::AccessTokenPrefix::D,
         HttpCallbackHandler {
             bind_host: "127.0.0.1:8080".into(),
             redirect_url_base: "http://localhost:8080".into(),
-        }
-    ).await
+        },
+    )
+    .await
+    .ok();
+
+    Ok(())
 }

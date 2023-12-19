@@ -16,7 +16,7 @@ use wry::{
 use xal::{
     flows::{AuthPromptCallback, AuthPromptData},
     url::Url,
-    Error, XalAuthenticator, AccessTokenPrefix,
+    AccessTokenPrefix, Error, XalAuthenticator,
 };
 use xal_examples::auth_main_default;
 
@@ -111,5 +111,9 @@ async fn main() -> Result<(), Error> {
             .to_owned(),
     };
 
-    auth_main_default(AccessTokenPrefix::None, callback_handler).await
+    auth_main_default(AccessTokenPrefix::None, callback_handler)
+        .await
+        .ok();
+
+    Ok(())
 }
