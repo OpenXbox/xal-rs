@@ -7,12 +7,14 @@
 
 Authenticate with Xbox Live
 
-## Quickstart
+## Documentation
 
-```rs
-todo!("")
-```
+Find the documentation here: <https://docs.rs/xal>
 
+## Minimum supported Rust version
 
-Documentation: <https://docs.rs/xal>
+This crate requires at least Rust 1.70 (stable).
 
+## Disclaimer
+
+This is an unofficial library not endorsed by Microsoft. Use at your own risk!
