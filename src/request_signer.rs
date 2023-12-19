@@ -431,6 +431,8 @@ impl RequestSigner {
 
 /// Get Xbox Live endpoint descriptions required for dynamically signing HTTP requests
 /// based on target domain / endpoint
+/// 
+/// Can be used to instantiate [`SignaturePolicyCache`].
 pub async fn get_endpoints() -> Result<response::TitleEndpointsResponse, Error> {
     let resp = reqwest::Client::new()
         .get(Constants::XBOX_TITLE_ENDPOINTS_URL)

@@ -17,13 +17,15 @@ pub use url;
 
 mod authenticator;
 mod error;
+mod flows;
 mod models;
 mod request_signer;
+mod tokenstore;
 
 pub mod extensions;
-pub mod flows;
-pub mod tokenstore;
 pub use authenticator::*;
 pub use error::Error;
+pub use flows::*;
 pub use models::*;
 pub use request_signer::*;
+pub use tokenstore::*;

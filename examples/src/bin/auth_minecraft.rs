@@ -1,6 +1,6 @@
 use serde_json::json;
 use xal::{
-    extensions::JsonExDeserializeMiddleware, flows, oauth2::TokenResponse, AccessTokenPrefix,
+    extensions::JsonExDeserializeMiddleware, CliCallbackHandler, oauth2::TokenResponse, AccessTokenPrefix,
     Error, XalAuthenticator,
 };
 use xal_examples::auth_main;
@@ -15,7 +15,7 @@ async fn main() -> Result<(), Error> {
         client_params,
         "RETAIL".into(),
         AccessTokenPrefix::None,
-        flows::CliCallbackHandler,
+        CliCallbackHandler,
     )
     .await?;
 

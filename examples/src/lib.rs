@@ -2,8 +2,8 @@ use clap::{Parser, ValueEnum};
 use env_logger::Env;
 use log::info;
 use xal::{
-    flows, tokenstore::TokenStore, AccessTokenPrefix, Constants, Error, XalAppParameters,
-    XalAuthenticator, XalClientParameters,
+    Flows, TokenStore, AccessTokenPrefix, Constants, Error, XalAppParameters,
+    XalAuthenticator, XalClientParameters, AuthPromptCallback
 };
 
 /// Common cli arguments
@@ -57,7 +57,7 @@ pub enum AuthFlow {
 
 pub async fn auth_main_default(
     access_token_prefix: AccessTokenPrefix,
-    auth_cb: impl flows::AuthPromptCallback,
+    auth_cb: impl AuthPromptCallback,
 ) -> Result<TokenStore, Error> {
     auth_main(
         XalAppParameters::default(),
@@ -75,22 +75,22 @@ pub async fn auth_main(
     client_params: XalClientParameters,
     sandbox_id: String,
     access_token_prefix: AccessTokenPrefix,
-    auth_cb: impl flows::AuthPromptCallback,
+    auth_cb: impl AuthPromptCallback,
 ) -> Result<TokenStore, Error> {
     let args = handle_args();
 
-    let mut ts = match flows::try_refresh_live_tokens_from_file(&args.token_filepath).await {
+    let mut ts = match Flows::try_refresh_live_tokens_from_file(&args.token_filepath).await {
         Ok((mut authenticator, ts)) => {
             info!("Tokens refreshed succesfully, proceeding with Xbox Live Authorization");
             match args.flow {
                 AuthFlow::Sisu => {
                     info!("Authorize and gather rest of xbox live tokens via sisu");
-                    flows::xbox_live_sisu_authorization_flow(&mut authenticator, ts.live_token)
+                    Flows::xbox_live_sisu_authorization_flow(&mut authenticator, ts.live_token)
                         .await?
                 }
                 _ => {
                     info!("Authorize Xbox Live the traditional way, via individual requests");
-                    flows::xbox_live_authorization_traditional_flow(
+                    Flows::xbox_live_authorization_traditional_flow(
                         &mut authenticator,
                         ts.live_token,
                         Constants::RELYING_PARTY_XBOXLIVE.into(),
@@ -108,17 +108,17 @@ pub async fn auth_main(
             info!("Authentication via flow={:?}", args.flow);
             let ts = match args.flow {
                 AuthFlow::Sisu => {
-                    flows::xbox_live_sisu_full_flow(&mut authenticator, auth_cb).await?
+                    Flows::xbox_live_sisu_full_flow(&mut authenticator, auth_cb).await?
                 }
                 AuthFlow::DeviceCode => {
-                    flows::ms_device_code_flow(&mut authenticator, auth_cb, tokio::time::sleep)
+                    Flows::ms_device_code_flow(&mut authenticator, auth_cb, tokio::time::sleep)
                         .await?
                 }
                 AuthFlow::Implicit => {
-                    flows::ms_authorization_flow(&mut authenticator, auth_cb, true).await?
+                    Flows::ms_authorization_flow(&mut authenticator, auth_cb, true).await?
                 }
                 AuthFlow::AuthorizationCode => {
-                    flows::ms_authorization_flow(&mut authenticator, auth_cb, false).await?
+                    Flows::ms_authorization_flow(&mut authenticator, auth_cb, false).await?
                 }
             };
 
@@ -128,7 +128,7 @@ pub async fn auth_main(
                     info!("Continuing flow via traditional Xbox Live authorization");
                     // Only required for non-sisu authentication, as
                     // sisu already gathers all the tokens at once
-                    flows::xbox_live_authorization_traditional_flow(
+                    Flows::xbox_live_authorization_traditional_flow(
                         &mut authenticator,
                         ts.live_token,
                         Constants::RELYING_PARTY_XBOXLIVE.into(),
