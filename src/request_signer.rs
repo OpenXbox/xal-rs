@@ -11,7 +11,7 @@ use crate::{
 use async_trait::async_trait;
 use base64ct::{self, Base64, Encoding};
 use chrono::prelude::*;
-use log::{info, warn};
+use log::{debug, info, warn};
 use nt_time::FileTime;
 use p256::{
     ecdsa::{
@@ -190,6 +190,8 @@ impl TryFrom<http::Request<Vec<u8>>> for HttpMessageToSign {
 /// Request signer
 ///
 /// Calculates the `Signature` header for certain Xbox Live HTTP request
+///
+/// Use the [`crate::extensions::SigningReqwestBuilder`] for signing HTTP requests more comfortably.
 #[derive(Debug, Clone)]
 pub struct RequestSigner {
     /// Elliptic curve keypair
@@ -335,6 +337,14 @@ impl RequestSigner {
     }
 
     /// Returns the proof key as JWK
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use xal::RequestSigner;
+    /// let proof_key = RequestSigner::new().get_proof_key();
+    /// let proof_key_json = serde_json::to_string(&proof_key);
+    /// ```
     pub fn get_proof_key(&self) -> ProofKey {
         ProofKey::new(&self.keypair)
     }
@@ -489,16 +499,24 @@ pub async fn get_endpoints() -> Result<response::TitleEndpointsResponse, Error> 
 /// Signature policy cache
 ///
 ///
-#[derive(Debug, Serialize, Deserialize, Clone)]
-#[derive(Default)]
+#[derive(Debug, Serialize, Deserialize, Clone, Default)]
 pub struct SignaturePolicyCache {
     endpoints: Option<TitleEndpointsResponse>,
 }
 
-
-
 impl SignaturePolicyCache {
     /// Create a new SignaturePolicyCache.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use xal::{SignaturePolicyCache, get_endpoints};
+    ///
+    /// # tokio_test::block_on(async {
+    /// let endpoints = get_endpoints().await.unwrap();
+    /// let policy_cache = SignaturePolicyCache::new(endpoints);
+    /// # })
+    /// ```
     pub fn new(endpoints: TitleEndpointsResponse) -> Self {
         Self {
             endpoints: Some(endpoints),
@@ -513,6 +531,27 @@ impl SignaturePolicyCache {
     /// Find the policy for the given URL.
     ///
     /// If a matching policy is found, returns the corresponding SigningPolicy. Otherwise, returns None.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use xal::SignaturePolicyCache;
+    /// # tokio_test::block_on(async {
+    /// let mut policy_cache = SignaturePolicyCache::default();
+    /// # let endpoints = serde_json::from_str(include_str!("../testdata/title_endpoints.json")).unwrap();
+    /// # let mut policy_cache = SignaturePolicyCache::new(endpoints);
+    ///
+    /// let policy = policy_cache.find_policy_for_url("https://example.xboxlive.com")
+    ///     .await
+    ///     .unwrap();
+    /// assert!(policy.is_some());
+    ///
+    /// let policy_not_found = policy_cache.find_policy_for_url("https://example.com")
+    ///     .await
+    ///     .unwrap();
+    /// assert!(policy_not_found.is_none());
+    /// # })
+    /// ```
     pub async fn find_policy_for_url(&mut self, url: &str) -> Result<Option<SigningPolicy>, Error> {
         let url = url::Url::parse(url)?;
 
@@ -555,7 +594,7 @@ impl SignaturePolicyCache {
 
         match matching_endpoint {
             Some(ep) => {
-                println!("Identified Title endpoint={ep:?} for URL={url} {url:?}");
+                debug!("Identified Title endpoint={ep:?} for URL={url} {url:?}");
                 let policy_index = ep.signature_policy_index.unwrap() as usize;
                 let policy =
                     endpoints

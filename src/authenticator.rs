@@ -117,11 +117,25 @@ impl Default for XalAuthenticator {
 /// Static methods
 impl XalAuthenticator {
     /// Generate OAuth2 random state
+    ///
+    /// Examples
+    ///
+    /// ```
+    /// # use xal::XalAuthenticator;
+    /// let state = XalAuthenticator::generate_random_state();
+    /// ```
     pub fn generate_random_state() -> CsrfToken {
         CsrfToken::new_random()
     }
 
     /// Generate OAuth2 code verifier
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use xal::XalAuthenticator;
+    /// let (pkce_challenge, pkce_verifier) = XalAuthenticator::generate_code_verifier();
+    /// ```
     pub fn generate_code_verifier() -> (PkceCodeChallenge, PkceCodeVerifier) {
         PkceCodeChallenge::new_random_sha256()
     }
@@ -174,6 +188,22 @@ impl XalAuthenticator {
     ///
     /// * `Error::GeneralError` - If there is a problem with the response url.
     /// * `Error::OAuthExecutionError` - If there is an error with the server response or if the authorization code is not present.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use xal::{
+    ///     XalAuthenticator, url::Url,
+    ///     oauth2::CsrfToken,
+    /// };
+    /// let url = Url::parse("https://example.com/?code=123&state=ABC").unwrap();
+    /// let code = XalAuthenticator::parse_authorization_code_response(
+    ///     &url,
+    ///     Some(&CsrfToken::new("ABC".into())),
+    /// ).unwrap();
+    ///
+    /// assert_eq!(code.secret(), "123");
+    /// ```
     pub fn parse_authorization_code_response(
         redirect_url: &Url,
         expected_state: Option<&CsrfToken>,
@@ -238,15 +268,20 @@ impl XalAuthenticator {
     ///
     /// ```
     /// use xal::XalAuthenticator;
-    /// use xal::oauth2::CsrfToken;
+    /// use xal::oauth2::{CsrfToken, TokenResponse};
     /// use xal::url::Url;
     ///
-    /// let url = Url::parse("https://example.com/callback#access_token=token123&token_type=Bearer&expires_in=3600&state=123abc")
-    ///     .unwrap();
-    /// let state = "123abc".to_string();
-    /// let expected_state = CsrfToken::new(state);
-    /// let parsed_response = XalAuthenticator::parse_implicit_grant_url(&url, Some(&expected_state)).unwrap();
-    /// println!("{:?}", parsed_response);
+    /// let url = Url::parse(
+    ///     "https://example.com/callback#access_token=token123&token_type=Bearer&expires_in=3600&state=123abc"
+    /// )
+    /// .unwrap();
+    ///
+    /// let live_tokens = XalAuthenticator::parse_implicit_grant_url(
+    ///     &url,
+    ///     Some(&CsrfToken::new("123abc".into()))
+    /// ).unwrap();
+    ///
+    /// assert_eq!(live_tokens.access_token().secret(), "token123");
     /// ```
     pub fn parse_implicit_grant_url(
         url: &Url,
@@ -303,6 +338,23 @@ impl XalAuthenticator {
     ///
     /// See constants in [`crate::models::app_params`] for [`crate::XalAppParameters`] and
     /// [`crate::models::client_params`] for [`crate::XalClientParameters`].
+    ///
+    /// # Examples
+    ///
+    /// Instantiate explicitly with app/client parameters
+    ///
+    /// ```
+    /// use xal::{XalAuthenticator, app_params, client_params};
+    /// let authenticator = XalAuthenticator::new(
+    ///     app_params::APP_GAMEPASS_BETA(),
+    ///     client_params::CLIENT_ANDROID(),
+    ///     "RETAIL".into(),
+    /// );
+    /// ```
+    ///
+    /// # Notes
+    ///
+    /// If you don't have specific needs for client parameters, use [`crate::XalAuthenticator::default`]
     pub fn new(
         app_params: XalAppParameters,
         client_params: XalClientParameters,
@@ -352,7 +404,9 @@ impl XalAuthenticator {
             .map(|url| Url::parse(&url).unwrap())
     }
 
-    /// Create an internal OAuth2 client with provided scopes
+    /// Create an internal [`oauth2::Client`]
+    ///
+    /// Refer to [`oauth2`] crate for it's usage
     pub fn oauth_client(&self, client_secret: Option<ClientSecret>) -> Result<BasicClient, Error> {
         let client = OAuthClient::new(
             ClientId::new(self.app_params.app_id.to_string()),
@@ -430,6 +484,27 @@ impl XalAuthenticator {
     /// to the user, call `poll_device_code_auth`.
     ///
     /// You can transform the returned value into [`crate::oauth2::VerificationUriComplete`] by calling `get_device_code_verification_uri`.
+    ///
+    /// # Examples
+    ///
+    /// ```no_run
+    /// use xal::XalAuthenticator;
+    ///
+    /// let mut authenticator = XalAuthenticator::default();
+    /// # tokio_test::block_on(async {
+    /// let device_code_resp = authenticator
+    ///     .initiate_device_code_auth()
+    ///     .await
+    ///     .unwrap();
+    /// // Present authentication parameters from `device_code_resp` to user
+    /// let live_tokens = authenticator
+    ///     .poll_device_code_auth(&device_code_resp, tokio::time::sleep)
+    ///     .await
+    ///     .unwrap();
+    ///
+    /// println!("{live_tokens:?}");
+    /// # });
+    /// ```
     pub async fn initiate_device_code_auth(
         &mut self,
     ) -> Result<StandardDeviceAuthorizationResponse, Error> {
@@ -450,6 +525,27 @@ impl XalAuthenticator {
     /// # Arguments
     ///
     /// - `sleep_fn` is the impl of an async sleep function
+    ///
+    /// # Examples
+    ///
+    /// ```no_run
+    /// use xal::XalAuthenticator;
+    ///
+    /// let mut authenticator = XalAuthenticator::default();
+    /// # tokio_test::block_on(async {
+    /// let device_code_resp = authenticator
+    ///     .initiate_device_code_auth()
+    ///     .await
+    ///     .unwrap();
+    /// // Present authentication parameters from `device_code_resp` to user
+    /// let live_tokens = authenticator
+    ///     .poll_device_code_auth(&device_code_resp, tokio::time::sleep)
+    ///     .await
+    ///     .unwrap();
+    ///
+    /// println!("{live_tokens:?}");
+    /// # });
+    /// ```
     pub async fn poll_device_code_auth<S, SF>(
         &mut self,
         device_auth_resp: &StandardDeviceAuthorizationResponse,
@@ -585,20 +681,20 @@ impl XalAuthenticator {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```no_run
     /// use xal::XalAuthenticator;
     /// use xal::oauth2::RefreshToken;
     ///
-    /// let authenticator = XalAuthenticator::default();
+    /// let mut authenticator = XalAuthenticator::default();
     /// let refresh_token = RefreshToken::new("old_refresh_token".to_string());
-    /// /*
+    /// # tokio_test::block_on(async {
     /// let refreshed_live_tokens = authenticator
     ///     .refresh_token(&refresh_token)
     ///     .await
     ///     .unwrap();
     ///
     /// println!("Refreshed tokens: {refreshed_live_tokens:?}");
-    /// */
+    /// # });
     /// ```
     pub async fn refresh_token(
         &mut self,
@@ -903,6 +999,30 @@ impl XalAuthenticator {
     ///
     /// This method returns an [`crate::Error`] if the POST request fails or the JSON response cannot be parsed.
     ///
+    /// # Examples
+    ///
+    /// ```
+    /// use xal::{XalAuthenticator, Flows, Error, AccessTokenPrefix, CliCallbackHandler};
+    /// use xal::response::WindowsLiveTokens;
+    ///
+    /// # async fn example() -> Result<(), Error> {
+    /// let mut authenticator = XalAuthenticator::default();
+    ///
+    /// let token_store = Flows::ms_device_code_flow(
+    ///     &mut authenticator,
+    ///     CliCallbackHandler,
+    ///     tokio::time::sleep
+    /// )
+    /// .await?;
+    ///
+    /// let user_token = authenticator.get_user_token(
+    ///     &token_store.live_token,
+    ///     AccessTokenPrefix::D,
+    /// )
+    /// .await?;
+    /// # Ok(())
+    /// # }
+    /// ```
     pub async fn get_user_token(
         &mut self,
         access_token: &response::WindowsLiveTokens,
@@ -956,6 +1076,36 @@ impl XalAuthenticator {
     ///
     /// This method returns an `Error` if the POST request fails or the JSON response cannot be parsed.
     ///
+    /// # Examples
+    ///
+    /// ```
+    /// use xal::{XalAuthenticator, Flows, Error, AccessTokenPrefix, CliCallbackHandler};
+    ///
+    /// # async fn example() -> Result<(), Error> {
+    /// let mut authenticator = XalAuthenticator::new(
+    ///     xal::app_params::MC_BEDROCK_SWITCH(),
+    ///     xal::client_params::CLIENT_NINTENDO(),
+    ///     "RETAIL".into()
+    /// );
+    ///
+    /// let token_store = Flows::ms_device_code_flow(
+    ///     &mut authenticator,
+    ///     CliCallbackHandler,
+    ///     tokio::time::sleep
+    /// )
+    /// .await?;
+    ///
+    /// let device_token = authenticator.get_device_token()
+    ///     .await?;
+    ///  
+    /// let title_token = authenticator.get_title_token(
+    ///     &token_store.live_token,
+    ///     &device_token,
+    /// )
+    /// .await?;
+    /// # Ok(())
+    /// # }
+    /// ```
     pub async fn get_title_token(
         &mut self,
         access_token: &response::WindowsLiveTokens,
@@ -1007,6 +1157,51 @@ impl XalAuthenticator {
     /// # Errors
     ///
     /// This method returns an `Error` if the POST request fails or the JSON response cannot be parsed.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use xal::{XalAuthenticator, Flows, Error, AccessTokenPrefix, CliCallbackHandler};
+    /// use xal::response::WindowsLiveTokens;
+    ///
+    /// # async fn example() -> Result<(), Error> {
+    /// let mut authenticator = XalAuthenticator::new(
+    ///     xal::app_params::MC_BEDROCK_SWITCH(),
+    ///     xal::client_params::CLIENT_NINTENDO(),
+    ///     "RETAIL".into()
+    /// );
+    ///
+    /// let token_store = Flows::ms_device_code_flow(
+    ///     &mut authenticator,
+    ///     CliCallbackHandler,
+    ///     tokio::time::sleep
+    /// )
+    /// .await?;
+    ///
+    /// let device_token = authenticator.get_device_token()
+    ///     .await?;
+    ///  
+    /// let title_token = authenticator.get_title_token(
+    ///     &token_store.live_token,
+    ///     &device_token,
+    /// )
+    /// .await?;
+    ///
+    /// let user_token = authenticator.get_user_token(
+    ///     &token_store.live_token,
+    ///     AccessTokenPrefix::None,
+    /// )
+    /// .await?;
+    ///
+    /// let xsts_token = authenticator.get_xsts_token(
+    ///     Some(&device_token),
+    ///     Some(&title_token),
+    ///     Some(&user_token),
+    ///     "rp://api.minecraftservices.com/",
+    /// ).await?;
+    /// # Ok(())
+    /// # }
+    /// ```
     pub async fn get_xsts_token(
         &mut self,
         device_token: Option<&response::DeviceToken>,

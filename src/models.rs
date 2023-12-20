@@ -25,6 +25,19 @@ pub struct ProofKey {
 
 impl ProofKey {
     /// Create new instance of proof key
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use xal::ProofKey;
+    /// use p256::SecretKey;
+    ///
+    /// let secret_key = SecretKey::random(&mut rand::thread_rng());
+    /// let proof_key = ProofKey::new(&secret_key);
+    ///
+    /// let serialized = serde_json::to_string(&proof_key).unwrap();
+    /// println!("{serialized}");
+    /// ```
     pub fn new(key: &SecretKey) -> Self {
         let point = key.public_key().to_encoded_point(false);
         Self {
@@ -477,7 +490,7 @@ impl ToString for DeviceType {
 /// XAL App parameters
 ///
 /// Mandatory for XAL authentication flow
-#[derive(Debug, Serialize, Deserialize, Clone)]
+#[derive(Debug, Serialize, Deserialize, PartialEq, Eq, Clone)]
 pub struct XalAppParameters {
     /// App Id (For authorization/permission scope)
     pub app_id: String,
@@ -492,6 +505,21 @@ pub struct XalAppParameters {
 /// Application parameter constants
 ///
 /// Used for instantiating [`crate::XalAuthenticator`]
+///
+/// # Examples
+///
+/// ```
+/// use xal::{XalAuthenticator, XalClientParameters, app_params};
+///
+/// let mut authenticator = XalAuthenticator::new(
+///     app_params::APP_GAMEPASS_BETA(),
+///     XalClientParameters::default(),
+///     "RETAIL".into()
+/// );
+///
+/// assert_eq!(authenticator.app_params(), app_params::APP_GAMEPASS_BETA());
+/// assert_ne!(authenticator.app_params(), app_params::APP_XBOX_BETA());
+/// ```
 #[allow(non_snake_case)]
 pub mod app_params {
     use oauth2::{RedirectUrl, Scope};
@@ -652,7 +680,7 @@ impl Default for XalAppParameters {
 /// XAL Client parameters
 ///
 /// Metadata from the client which attempts authentication
-#[derive(Debug, Serialize, Deserialize, Clone)]
+#[derive(Debug, Serialize, Deserialize, PartialEq, Eq, Clone)]
 pub struct XalClientParameters {
     /// HTTP User Agent
     pub user_agent: String,
@@ -667,6 +695,22 @@ pub struct XalClientParameters {
 /// Client parameter constants
 ///
 /// Used for instantiating [`crate::XalAuthenticator`]
+///
+///
+/// # Examples
+///
+/// ```
+/// use xal::{XalAuthenticator, XalAppParameters, client_params};
+///
+/// let mut authenticator = XalAuthenticator::new(
+///     XalAppParameters::default(),
+///     client_params::CLIENT_ANDROID(),
+///     "RETAIL".into()
+/// );
+///
+/// assert_eq!(authenticator.client_params(), client_params::CLIENT_ANDROID());
+/// assert_ne!(authenticator.client_params(), client_params::CLIENT_IOS());
+/// ```
 #[allow(non_snake_case)]
 pub mod client_params {
     use super::{DeviceType, XalClientParameters};

@@ -183,6 +183,27 @@ pub trait AuthPromptCallback {
 }
 
 /// Implementation of a cli callback handler
+///
+/// # Examples
+///
+/// Using the [`CliCallbackHandler`] will prompt the user via commandline for an action.
+/// e.g. Browsing to an authentication URL and pasting back the redirect URL incl. authorization data.
+///
+/// ```no_run
+/// use xal::{XalAuthenticator, Flows, Error, CliCallbackHandler};
+///
+/// # async fn example() -> Result<(), Error> {
+/// let mut authenticator = XalAuthenticator::default();
+///
+/// let token_store = Flows::xbox_live_sisu_full_flow(
+///     &mut authenticator,
+///     CliCallbackHandler,
+/// )
+/// .await?;
+///
+/// # Ok(())
+/// # }
+/// ```
 pub struct CliCallbackHandler;
 
 #[async_trait]
@@ -224,7 +245,7 @@ impl Flows {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```no_run
     /// # use xal::{Error, Flows, TokenStore};
     ///
     /// # async fn demo_code() -> Result<(), Error> {
@@ -259,7 +280,7 @@ impl Flows {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```no_run
     /// use std::fs::File;
     /// use serde_json;
     /// use xal::{Flows, TokenStore};
@@ -306,14 +327,13 @@ impl Flows {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```no_run
     /// use xal::{XalAuthenticator, Flows, Error, AccessTokenPrefix, CliCallbackHandler};
     /// use xal::response::WindowsLiveTokens;
     ///
     /// # async fn async_sleep_fn(_: std::time::Duration) {}
     ///
     /// # async fn example() -> Result<(), Error> {
-    /// let do_implicit_flow = true;
     /// let mut authenticator = XalAuthenticator::default();
     ///
     /// let token_store = Flows::ms_device_code_flow(
@@ -375,7 +395,7 @@ impl Flows {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```no_run
     /// use xal::{XalAuthenticator, Flows, Error, AccessTokenPrefix, CliCallbackHandler};
     /// use xal::response::WindowsLiveTokens;
     ///
@@ -452,9 +472,8 @@ impl Flows {
     ///
     /// # Examples
     ///
-    /// ```
-    /// use xal::{XalAuthenticator, Flows, Error, AccessTokenPrefix, CliCallbackHandler};
-    /// use xal::response::WindowsLiveTokens;
+    /// ```no_run
+    /// use xal::{XalAuthenticator, Flows, Error, CliCallbackHandler};
     ///
     /// # async fn example() -> Result<(), Error> {
     /// let mut authenticator = XalAuthenticator::default();
@@ -569,11 +588,9 @@ impl Flows {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```no_run
     /// use xal::{XalAuthenticator, Flows, CliCallbackHandler, Error, AccessTokenPrefix};
     /// use xal::response::WindowsLiveTokens;
-    ///
-    /// # async fn async_sleep_fn(_: std::time::Duration) {}
     ///
     /// # async fn example() -> Result<(), Error> {
     /// let mut authenticator = XalAuthenticator::default();
@@ -581,7 +598,7 @@ impl Flows {
     /// let token_store = Flows::ms_device_code_flow(
     ///     &mut authenticator,
     ///     CliCallbackHandler,
-    ///     async_sleep_fn
+    ///     tokio::time::sleep
     /// )
     /// .await?;
     ///
@@ -667,11 +684,9 @@ impl Flows {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```no_run
     /// use xal::{XalAuthenticator, Flows, CliCallbackHandler, Error, AccessTokenPrefix};
     /// use xal::response::WindowsLiveTokens;
-    ///
-    /// # async fn async_sleep_fn(_: std::time::Duration) {}
     ///
     /// # async fn example() -> Result<(), Error> {
     /// let mut authenticator = XalAuthenticator::default();
@@ -679,7 +694,7 @@ impl Flows {
     /// let token_store = Flows::ms_device_code_flow(
     ///     &mut authenticator,
     ///     CliCallbackHandler,
-    ///     async_sleep_fn
+    ///     tokio::time::sleep
     /// )
     /// .await?;
     ///

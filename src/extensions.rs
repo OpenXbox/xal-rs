@@ -1,5 +1,6 @@
 //! Extensions to reqwest HTTP client library.
 //!
+//! See the respective trait for implementation examples.
 use async_trait::async_trait;
 use chrono::{DateTime, Utc};
 use cvlib::CorrelationVector;
@@ -10,6 +11,29 @@ use reqwest::ResponseBuilderExt;
 use crate::{error::Error, request_signer::RequestSigner, RequestSigning};
 
 /// Extension to [`reqwest::RequestBuilder`] allowing for verbosely logging the request
+///
+/// # Examples
+///
+/// ```
+/// use xal::Error;
+/// use xal::extensions::LoggingReqwestRequestHandler;
+/// use reqwest::Client;
+///
+/// async fn demo_log_request() -> Result<(), Error> {
+///     /* Initialize loglevel */
+///     // simple_logger::init_with_level(log::Level::Debug).unwrap();
+///
+///     // Log the full request to DEBUG-loglevel before sending it
+///     let _resp = Client::new()
+///         .get("https://example.com")
+///         .log()
+///         .await?
+///         .send()
+///         .await?;
+///
+///     Ok(())
+/// }
+/// ```
 #[async_trait]
 pub trait LoggingReqwestRequestHandler {
     /// Log request (debug-loglevel)
@@ -36,7 +60,30 @@ impl LoggingReqwestRequestHandler for reqwest::RequestBuilder {
     }
 }
 
-/// Extension to [`reqwest::Response`] allowing for verbosely logging the request
+/// Extension to [`reqwest::RequestBuilder`] allowing for verbosely logging the response
+///
+/// # Examples
+///
+/// ```
+/// use xal::Error;
+/// use xal::extensions::LoggingReqwestResponseHandler;
+/// use reqwest::Client;
+///
+/// async fn demo_log_response() -> Result<(), Error> {
+///     /* Initialize loglevel */
+///     // simple_logger::init_with_level(log::Level::Debug).unwrap();
+///
+///     // Log the full request to DEBUG-loglevel before sending it
+///     let _resp = Client::new()
+///         .get("https://example.com")
+///         .send()
+///         .await?
+///         .log()
+///         .await?;
+///
+///     Ok(())
+/// }
+/// ```
 #[async_trait]
 pub trait LoggingReqwestResponseHandler {
     /// Log response (debug-loglevel)
@@ -51,14 +98,15 @@ impl LoggingReqwestResponseHandler for reqwest::Response {
             .status(self.status());
 
         let headers = self.headers().clone();
-        let hdr_mut = response_builder.headers_mut().unwrap();
+        let hdr_mut = response_builder.headers_mut().ok_or(Error::GeneralError(
+            "Failed to get mut ref to header".into(),
+        ))?;
+
         headers.into_iter().for_each(|(key, val)| {
             hdr_mut.insert(key.unwrap(), val);
         });
 
-        let new_resp = response_builder
-            .body(self.bytes().await?)
-            .expect("Failed to attach body to new response");
+        let new_resp = response_builder.body(self.bytes().await?)?;
 
         debug!("[*] Response: {:?}", new_resp);
 
@@ -68,6 +116,42 @@ impl LoggingReqwestResponseHandler for reqwest::Response {
 
 /// Extension to [`reqwest::Response`] allowing for returning more-verbose error
 /// on deserialization failure
+///
+/// # Examples
+///
+/// ```
+/// use xal::Error;
+/// use xal::extensions::JsonExDeserializeMiddleware;
+/// use serde::Deserialize;
+/// use reqwest::Client;
+///
+/// #[derive(Debug, Deserialize)]
+/// struct DemoStruct {
+///   pub some_key: String,
+/// }
+///
+/// async fn demo_json_deserialize_ex() -> Result<(), Error> {
+///     // Return a detailed error in case the JSON Deserialization fails
+///     let result = Client::new()
+///         .get("https://example.com")
+///         .send()
+///         .await?
+///         .json_ex::<DemoStruct>()
+///         .await;
+///
+///     match result {
+///         Err(Error::JsonHttpResponseError{status,url,headers,body,inner}) => {
+///             eprintln!(
+///                 "Failed deserializing body into struct!
+///                  {status:?} {url:?} {headers:?} {body:?} {inner:?}"
+///             );
+///         },
+///         _ => {}
+///     };
+///
+///     Ok(())
+/// }
+/// ```
 #[async_trait]
 pub trait JsonExDeserializeMiddleware {
     /// Deserialize JSON response into struct implementing [`serde::de::DeserializeOwned`]
@@ -98,6 +182,30 @@ impl JsonExDeserializeMiddleware for reqwest::Response {
 }
 
 /// Extension to [`reqwest::RequestBuilder`] for signing HTTP requests according to Xbox Live specs
+///
+/// # Examples
+///
+/// ```
+/// use xal::{RequestSigner, Error};
+/// use xal::extensions::SigningReqwestBuilder;
+/// use reqwest::Client;
+/// use serde_json::json;
+///
+/// async fn demo_sign_request() -> Result<(), Error> {
+///     // Construct request signer
+///     let mut request_signer = RequestSigner::new();
+///     
+///     let response = Client::new()
+///         .post("https://example.xboxlive.com")
+///         .json(&json!({"some": "value"}))
+///         .sign(&mut request_signer, None)
+///         .await?
+///         .send()
+///         .await?;
+///
+///     Ok(())
+/// }
+/// ```
 #[async_trait]
 pub trait SigningReqwestBuilder {
     /// Sign HTTP request for Xbox Live
@@ -138,6 +246,28 @@ impl SigningReqwestBuilder for reqwest::RequestBuilder {
 }
 
 /// Extension to [`reqwest::RequestBuilder`] for adding [`cvlib::CorrelationVector`] to request headers
+///
+/// # Examples
+///
+/// ```
+/// use xal::Error;
+/// use xal::cvlib::CorrelationVector;
+/// use xal::extensions::CorrelationVectorReqwestBuilder;
+/// use reqwest::Client;
+///
+/// async fn demo_cv_request() -> Result<(), Error> {
+///     // Construct correlation vector
+///     let mut cv = CorrelationVector::new();
+///     
+///     let response = Client::new()
+///         .post("https://example.xboxlive.com")
+///         .add_cv(&mut cv)?
+///         .send()
+///         .await?;
+///
+///     Ok(())
+/// }
+/// ```
 pub trait CorrelationVectorReqwestBuilder {
     /// Add HTTP header `MS-CV` into headers
     fn add_cv(self, cv: &mut CorrelationVector) -> Result<reqwest::RequestBuilder, Error>;
