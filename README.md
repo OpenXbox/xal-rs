@@ -11,6 +11,10 @@ Authenticate with Xbox Live
 
 Find the documentation here: <https://docs.rs/xal>
 
+## Examples
+
+Check out [xal-examples](./examples/)
+
 ## Minimum supported Rust version
 
 This crate requires at least Rust 1.70 (stable).
