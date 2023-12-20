@@ -29,6 +29,9 @@ name = "auth_cli"
 [[bin]]
 name = "auth_azure"
 
+[[bin]]
+name = "xbl_signed_request"
+
 [[bin]]         
 name = "auth_webview"
 required-features = ["webview"]
