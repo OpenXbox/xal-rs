@@ -30,6 +30,7 @@ nt-time = { version = "0.6.5", features = ["chrono"] }
 
 [dev-dependencies]
 hex-literal = "0.3.4"
+tokio = { version = "1", features = ["macros"] }
 
 [workspace]
 members = [

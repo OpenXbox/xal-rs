@@ -718,7 +718,8 @@ impl XalAuthenticator {
             .header("x-xbl-contract-version", "1")
             .add_cv(&mut self.ms_cv)?
             .json(&json_body)
-            .sign(&self.request_signer, None)?
+            .sign(&mut self.request_signer, None)
+            .await?
             .send()
             .await?;
 
@@ -807,7 +808,8 @@ impl XalAuthenticator {
             .post(Constants::XBOX_SISU_AUTHORIZE_URL)
             .add_cv(&mut self.ms_cv)?
             .json(&json_body)
-            .sign(&self.request_signer, None)?
+            .sign(&mut self.request_signer, None)
+            .await?
             .send()
             .await?
             .json_ex::<response::SisuAuthorizationResponse>()
@@ -876,7 +878,8 @@ impl XalAuthenticator {
             .header("x-xbl-contract-version", "1")
             .add_cv(&mut self.ms_cv)?
             .json(&json_body)
-            .sign(&self.request_signer, None)?
+            .sign(&mut self.request_signer, None)
+            .await?
             .send()
             .await?
             .json_ex::<response::DeviceToken>()
@@ -924,7 +927,8 @@ impl XalAuthenticator {
             .header("x-xbl-contract-version", "1")
             .add_cv(&mut self.ms_cv)?
             .json(&json_body)
-            .sign(&self.request_signer, None)?
+            .sign(&mut self.request_signer, None)
+            .await?
             .log()
             .await?
             .send()
@@ -973,7 +977,8 @@ impl XalAuthenticator {
             .header("x-xbl-contract-version", "1")
             .add_cv(&mut self.ms_cv)?
             .json(&json_body)
-            .sign(&self.request_signer, None)?
+            .sign(&mut self.request_signer, None)
+            .await?
             .log()
             .await?
             .send()
@@ -1032,7 +1037,8 @@ impl XalAuthenticator {
             .header("x-xbl-contract-version", "1")
             .add_cv(&mut self.ms_cv)?
             .json(&json_body)
-            .sign(&self.request_signer, None)?
+            .sign(&mut self.request_signer, None)
+            .await?
             .log()
             .await?
             .send()

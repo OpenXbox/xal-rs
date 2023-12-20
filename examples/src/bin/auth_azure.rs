@@ -7,10 +7,9 @@ use tokio::{
 };
 use xal::{
     client_params::CLIENT_ANDROID,
-    AuthPromptCallback, AuthPromptData,
     oauth2::{RedirectUrl, Scope},
     url::Url,
-    Error, XalAppParameters,
+    AuthPromptCallback, AuthPromptData, Error, XalAppParameters,
 };
 use xal_examples::auth_main;
 

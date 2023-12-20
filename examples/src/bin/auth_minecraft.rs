@@ -1,7 +1,7 @@
 use serde_json::json;
 use xal::{
-    extensions::JsonExDeserializeMiddleware, CliCallbackHandler, oauth2::TokenResponse, AccessTokenPrefix,
-    Error, XalAuthenticator,
+    extensions::JsonExDeserializeMiddleware, oauth2::TokenResponse, AccessTokenPrefix,
+    CliCallbackHandler, Error, XalAuthenticator,
 };
 use xal_examples::auth_main;
 

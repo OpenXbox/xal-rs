@@ -2,8 +2,8 @@ use clap::{Parser, ValueEnum};
 use env_logger::Env;
 use log::info;
 use xal::{
-    Flows, TokenStore, AccessTokenPrefix, Constants, Error, XalAppParameters,
-    XalAuthenticator, XalClientParameters, AuthPromptCallback
+    AccessTokenPrefix, AuthPromptCallback, Constants, Error, Flows, TokenStore, XalAppParameters,
+    XalAuthenticator, XalClientParameters,
 };
 
 /// Common cli arguments

@@ -1,4 +1,4 @@
-use xal::{CliCallbackHandler, AccessTokenPrefix, Error};
+use xal::{AccessTokenPrefix, CliCallbackHandler, Error};
 use xal_examples::auth_main_default;
 
 #[tokio::main]

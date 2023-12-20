@@ -98,26 +98,28 @@ impl JsonExDeserializeMiddleware for reqwest::Response {
 }
 
 /// Extension to [`reqwest::RequestBuilder`] for signing HTTP requests according to Xbox Live specs
+#[async_trait]
 pub trait SigningReqwestBuilder {
     /// Sign HTTP request for Xbox Live
-    fn sign(
+    async fn sign(
         self,
-        signer: &RequestSigner,
+        signer: &mut RequestSigner,
         timestamp: Option<DateTime<Utc>>,
     ) -> Result<reqwest::RequestBuilder, Error>;
 }
 
+#[async_trait]
 impl SigningReqwestBuilder for reqwest::RequestBuilder {
-    fn sign(
+    async fn sign(
         self,
-        signer: &RequestSigner,
+        signer: &mut RequestSigner,
         timestamp: Option<DateTime<Utc>>,
     ) -> Result<reqwest::RequestBuilder, Error> {
         match self.try_clone() {
             Some(rb) => {
                 let request = rb.build()?;
                 // Fallback to Utc::now() internally
-                let signed = signer.sign_request(request, timestamp)?;
+                let signed = signer.sign_request(request, timestamp).await?;
                 let body_bytes = signed
                     .body()
                     .ok_or(Error::InvalidRequest("Failed getting request body".into()))?

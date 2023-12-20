@@ -14,9 +14,7 @@ use wry::{
     webview::WebViewBuilder,
 };
 use xal::{
-    AuthPromptCallback, AuthPromptData,
-    url::Url,
-    AccessTokenPrefix, Error, XalAuthenticator,
+    url::Url, AccessTokenPrefix, AuthPromptCallback, AuthPromptData, Error, XalAuthenticator,
 };
 use xal_examples::auth_main_default;
 
