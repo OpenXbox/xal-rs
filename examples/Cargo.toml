@@ -30,6 +30,12 @@ name = "auth_cli"
 name = "auth_azure"
 
 [[bin]]
+name = "auth_minecraft"
+
+[[bin]]
+name = "auth_halo"
+
+[[bin]]
 name = "xbl_signed_request"
 
 [[bin]]         
