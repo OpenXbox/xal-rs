@@ -56,6 +56,7 @@ impl AuthPromptCallback for HttpCallbackHandler {
 
 #[tokio::main]
 async fn main() -> Result<(), Error> {
+    eprintln!("NOTE: --flow authorization-code required!");
     auth_main(
         XalAppParameters {
             app_id: "388ea51c-0b25-4029-aae2-17df49d23905".into(),
@@ -76,8 +77,7 @@ async fn main() -> Result<(), Error> {
             redirect_url_base: "http://localhost:8080".into(),
         },
     )
-    .await
-    .ok();
+    .await?;
 
     Ok(())
 }

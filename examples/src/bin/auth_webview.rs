@@ -110,8 +110,7 @@ async fn main() -> Result<(), Error> {
     };
 
     auth_main_default(AccessTokenPrefix::None, callback_handler)
-        .await
-        .ok();
+        .await?;
 
     Ok(())
 }
