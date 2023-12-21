@@ -410,10 +410,7 @@ impl XalAuthenticator {
     pub fn oauth_client(&self) -> Result<BasicClient, Error> {
         let client = OAuthClient::new(
             ClientId::new(self.app_params.client_id.to_string()),
-            self.app_params
-                .client_secret
-                .clone()
-                .map(|x| ClientSecret::new(x)),
+            self.app_params.client_secret.clone().map(ClientSecret::new),
             AuthUrl::new(Constants::OAUTH20_AUTHORIZE_URL.to_string())?,
             Some(TokenUrl::new(Constants::OAUTH20_TOKEN_URL.to_string())?),
         )

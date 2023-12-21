@@ -506,9 +506,9 @@ impl ToString for DeviceType {
 /// Mandatory for XAL authentication flow
 #[derive(Debug, Serialize, Deserialize, PartialEq, Eq, Clone)]
 pub struct XalAppParameters {
-    /// App Id (For authorization/permission scope)
+    /// OAuth2 Client Id
     pub client_id: String,
-    /// App Title-Id (For TitleToken)
+    /// App Title-Id (Required for SISU auth flow, for TitleToken)
     pub title_id: Option<String>,
     /// Scopes
     pub auth_scopes: Vec<Scope>,
