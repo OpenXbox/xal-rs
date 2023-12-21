@@ -1,6 +1,7 @@
 //! Definition of custom error type.
 //!
 
+use chrono::{DateTime, Utc};
 use oauth2::{
     basic::BasicErrorResponse, reqwest::AsyncHttpClientError, DeviceCodeErrorResponse,
     RequestTokenError,
@@ -65,6 +66,9 @@ pub enum Error {
     /// Failed processing HTTP request
     #[error("Failed processing HTTP request")]
     InvalidRequest(String),
+    /// Token expired
+    #[error("Token expired")]
+    TokenExpired(DateTime<Utc>),
     /// Unknown error
     #[error("unknown xal error")]
     Unknown,

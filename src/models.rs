@@ -245,8 +245,11 @@ pub mod request {
 
 /// HTTP Response models
 pub mod response {
+    use chrono::{DateTime, TimeZone, Utc};
     use oauth2::basic::BasicTokenResponse;
     use url::Url;
+
+    use crate::Error;
 
     use super::{Deserialize, HashMap, Serialize, SigningPolicy};
 
@@ -296,9 +299,9 @@ pub mod response {
     #[serde(rename_all = "PascalCase")]
     pub struct XTokenResponse<T> {
         /// Issue datetime of token
-        pub issue_instant: String,
+        pub issue_instant: DateTime<Utc>,
         /// Expiry datetime of token
-        pub not_after: String,
+        pub not_after: DateTime<Utc>,
         /// Token value
         pub token: String,
         /// XSTS display claims
@@ -322,11 +325,22 @@ pub mod response {
     impl<T> From<&str> for XTokenResponse<T> {
         fn from(s: &str) -> Self {
             Self {
-                issue_instant: "2020-12-15T00:00:00.0000000Z".into(),
-                not_after: "2199-12-15T00:00:00.0000000Z".into(),
+                issue_instant: Utc.with_ymd_and_hms(2020, 12, 15, 0, 0, 0).unwrap(),
+                not_after: Utc.with_ymd_and_hms(2199, 12, 15, 0, 0, 0).unwrap(),
                 token: s.to_owned(),
                 display_claims: None,
             }
+        }
+    }
+
+    impl<T> XTokenResponse<T> {
+        /// Check if token is valid
+        pub fn check_validity(&self) -> Result<(), Error> {
+            if self.not_after < chrono::offset::Utc::now() {
+                return Err(Error::TokenExpired(self.not_after));
+            }
+
+            Ok(())
         }
     }
 
