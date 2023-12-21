@@ -1,3 +1,11 @@
+//! Halo Waypoint authentication
+//! - Acquiring Spartan token
+//! - Acquiring flighting Id
+//!
+//! Reference:
+//! Den Delimarsky, Halo Infinite Web API Authentication
+//! Blog post: https://den.dev/blog/halo-api-authentication/
+//!
 use chrono::{DateTime, Utc};
 use env_logger::Env;
 use serde::Deserialize;

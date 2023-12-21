@@ -1,3 +1,5 @@
+//! Authenticating via custom Azure Client Id to Xbox Live
+//!
 use std::str::from_utf8;
 
 use async_trait::async_trait;
