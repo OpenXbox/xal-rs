@@ -514,6 +514,8 @@ pub struct XalAppParameters {
     pub auth_scopes: Vec<Scope>,
     /// Redirect Uri (For OAuth2 code response)
     pub redirect_uri: Option<RedirectUrl>,
+    /// OAuth2 Client Secret
+    pub client_secret: Option<String>,
 }
 
 /// Application parameter constants
@@ -551,6 +553,7 @@ pub mod app_params {
             redirect_uri: Some(
                 RedirectUrl::new(crate::Constants::OAUTH20_DESKTOP_REDIRECT_URL.into()).unwrap(),
             ),
+            client_secret: None,
         }
     }
 
@@ -564,6 +567,7 @@ pub mod app_params {
             redirect_uri: Some(
                 RedirectUrl::new(crate::Constants::OAUTH20_DESKTOP_REDIRECT_URL.into()).unwrap(),
             ),
+            client_secret: None,
         }
     }
 
@@ -577,6 +581,7 @@ pub mod app_params {
             redirect_uri: Some(
                 RedirectUrl::new(crate::Constants::OAUTH20_DESKTOP_REDIRECT_URL.into()).unwrap(),
             ),
+            client_secret: None,
         }
     }
 
@@ -590,6 +595,7 @@ pub mod app_params {
             redirect_uri: Some(
                 RedirectUrl::new(crate::Constants::OAUTH20_DESKTOP_REDIRECT_URL.into()).unwrap(),
             ),
+            client_secret: None,
         }
     }
 
@@ -604,6 +610,7 @@ pub mod app_params {
             redirect_uri: Some(
                 RedirectUrl::new(crate::Constants::OAUTH20_DESKTOP_REDIRECT_URL.into()).unwrap(),
             ),
+            client_secret: None,
         }
     }
 
@@ -616,6 +623,7 @@ pub mod app_params {
             redirect_uri: Some(
                 RedirectUrl::new(crate::Constants::OAUTH20_DESKTOP_REDIRECT_URL.into()).unwrap(),
             ),
+            client_secret: None,
         }
     }
 
@@ -628,6 +636,7 @@ pub mod app_params {
             redirect_uri: Some(
                 RedirectUrl::new(crate::Constants::OAUTH20_DESKTOP_REDIRECT_URL.into()).unwrap(),
             ),
+            client_secret: None,
         }
     }
 
@@ -640,6 +649,7 @@ pub mod app_params {
             redirect_uri: Some(
                 RedirectUrl::new(crate::Constants::OAUTH20_DESKTOP_REDIRECT_URL.into()).unwrap(),
             ),
+            client_secret: None,
         }
     }
 
@@ -652,6 +662,7 @@ pub mod app_params {
             redirect_uri: Some(
                 RedirectUrl::new(crate::Constants::OAUTH20_DESKTOP_REDIRECT_URL.into()).unwrap(),
             ),
+            client_secret: None,
         }
     }
 
@@ -664,6 +675,7 @@ pub mod app_params {
             redirect_uri: Some(
                 RedirectUrl::new(crate::Constants::OAUTH20_DESKTOP_REDIRECT_URL.into()).unwrap(),
             ),
+            client_secret: None,
         }
     }
 
