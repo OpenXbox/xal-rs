@@ -15,6 +15,11 @@ use xal::{
 };
 use xal_examples::auth_main;
 
+// Replace with your own Azure Client parameters
+const CLIENT_ID: &'static str = "388ea51c-0b25-4029-aae2-17df49d23905";
+const REDIRECT_URL: &'static str = "http://localhost:8080/auth/callback";
+const CLIENT_SECRET: Option<&'static str> = None;
+
 pub struct HttpCallbackHandler {
     bind_host: String,
     redirect_url_base: String,
@@ -61,15 +66,14 @@ async fn main() -> Result<(), Error> {
     eprintln!("NOTE: --flow authorization-code required!");
     auth_main(
         XalAppParameters {
-            app_id: "388ea51c-0b25-4029-aae2-17df49d23905".into(),
+            client_id: CLIENT_ID.into(),
             title_id: None,
             auth_scopes: vec![
                 Scope::new("Xboxlive.signin".into()),
                 Scope::new("Xboxlive.offline_access".into()),
             ],
-            redirect_uri: Some(
-                RedirectUrl::new("http://localhost:8080/auth/callback".into()).unwrap(),
-            ),
+            redirect_uri: Some(RedirectUrl::new(REDIRECT_URL.into()).unwrap()),
+            client_secret: CLIENT_SECRET.map(|x| x.to_string()),
         },
         CLIENT_ANDROID(),
         "RETAIL".into(),

@@ -407,10 +407,10 @@ impl XalAuthenticator {
     /// Create an internal [`oauth2::Client`]
     ///
     /// Refer to [`oauth2`] crate for it's usage
-    pub fn oauth_client(&self, client_secret: Option<ClientSecret>) -> Result<BasicClient, Error> {
+    pub fn oauth_client(&self) -> Result<BasicClient, Error> {
         let client = OAuthClient::new(
-            ClientId::new(self.app_params.app_id.to_string()),
-            client_secret,
+            ClientId::new(self.app_params.client_id.to_string()),
+            self.app_params.client_secret.clone().map(ClientSecret::new),
             AuthUrl::new(Constants::OAUTH20_AUTHORIZE_URL.to_string())?,
             Some(TokenUrl::new(Constants::OAUTH20_TOKEN_URL.to_string())?),
         )
@@ -438,13 +438,14 @@ impl XalAuthenticator {
     /// # async fn demo_code() {
     /// let mut authenticator = XalAuthenticator::new(
     ///     XalAppParameters {
-    ///         app_id: "388ea51c-0b25-4029-aae2-17df49d23905".into(),
+    ///         client_id: "388ea51c-0b25-4029-aae2-17df49d23905".into(),
     ///         title_id: None,
     ///         auth_scopes: vec![
     ///             Scope::new("Xboxlive.signin".into()),
     ///             Scope::new("Xboxlive.offline_access".into())
     ///         ],
-    ///         redirect_uri: Some(RedirectUrl::new("https://login.live.com/oauth20_desktop.srf".into()).unwrap())
+    ///         redirect_uri: Some(RedirectUrl::new("https://login.live.com/oauth20_desktop.srf".into()).unwrap()),
+    ///         client_secret: None,
     ///     },
     ///     client_params::CLIENT_ANDROID(),
     ///     "RETAIL".into()
@@ -461,7 +462,7 @@ impl XalAuthenticator {
         implicit_flow: bool,
     ) -> Result<(EndUserVerificationUrl, CsrfToken), Error> {
         let client =
-            self.oauth_client(None)?
+            self.oauth_client()?
                 .set_redirect_uri(self.app_params.redirect_uri.clone().ok_or(
                     Error::InvalidRedirectUrl("Redirect URL was not provided".into()),
                 )?);
@@ -508,7 +509,7 @@ impl XalAuthenticator {
     pub async fn initiate_device_code_auth(
         &mut self,
     ) -> Result<StandardDeviceAuthorizationResponse, Error> {
-        self.oauth_client(None)?
+        self.oauth_client()?
             .exchange_device_code()
             .unwrap()
             .add_scopes(self.app_params.auth_scopes.clone())
@@ -555,7 +556,7 @@ impl XalAuthenticator {
         S: Fn(std::time::Duration) -> SF,
         SF: std::future::Future<Output = ()>,
     {
-        self.oauth_client(None)?
+        self.oauth_client()?
             .exchange_device_access_token(device_auth_resp)
             .request_async(&async_http_client, sleep_fn, None)
             .await
@@ -592,7 +593,7 @@ impl XalAuthenticator {
         authorization_code: AuthorizationCode,
         code_verifier: Option<PkceCodeVerifier>,
     ) -> Result<response::WindowsLiveTokens, Error> {
-        let client = self.oauth_client(None)?;
+        let client = self.oauth_client()?;
 
         let mut req = client.exchange_code(authorization_code);
 
@@ -656,7 +657,7 @@ impl XalAuthenticator {
         T: serde::de::DeserializeOwned,
     {
         let resp = self
-            .oauth_client(None)?
+            .oauth_client()?
             .exchange_refresh_token(refresh_token)
             .add_scopes(scopes)
             .request_async(&async_http_client)
@@ -791,7 +792,7 @@ impl XalAuthenticator {
             ))?;
 
         let json_body = request::SisuAuthenticationRequest {
-            app_id: &self.app_params.app_id,
+            app_id: &self.app_params.client_id,
             title_id: &title_id,
             redirect_uri: self.app_params.redirect_uri.as_deref().ok_or(
                 Error::InvalidRedirectUrl("sisu_authenticate requires Redirect URL".to_string()),
@@ -892,7 +893,7 @@ impl XalAuthenticator {
     ) -> Result<response::SisuAuthorizationResponse, Error> {
         let json_body = request::SisuAuthorizationRequest {
             access_token: &format!("t={}", access_token.access_token().secret()),
-            app_id: &self.app_params.app_id,
+            app_id: &self.app_params.client_id,
             device_token: &device_token.token,
             sandbox: &self.sandbox_id.clone(),
             site_name: "user.auth.xboxlive.com",

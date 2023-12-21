@@ -190,10 +190,10 @@ mod tests {
 
     #[test]
     fn read_from_string() {
-        let tokens_str = r#"{"app_params":{"app_id":"00000000441cc96b","title_id":"42","auth_scopes":["service::user.auth.xboxlive.com::MBI_SSL"],"redirect_uri":"https://login.live.com/oauth20_desktop.srf"},"client_params":{"user_agent":"XAL","device_type":"NINTENDO","client_version":"0.0.0","query_display":"touch"},"sandbox_id":"RETAIL","live_token":{"access_token":"accessTokenABC","token_type":"bearer","expires_in":86400,"refresh_token":"refreshTokenABC","scope":"service::user.auth.xboxlive.com::MBI_SSL"}}"#;
+        let tokens_str = r#"{"app_params":{"client_id":"00000000441cc96b","title_id":"42","auth_scopes":["service::user.auth.xboxlive.com::MBI_SSL"],"redirect_uri":"https://login.live.com/oauth20_desktop.srf"},"client_params":{"user_agent":"XAL","device_type":"NINTENDO","client_version":"0.0.0","query_display":"touch"},"sandbox_id":"RETAIL","live_token":{"access_token":"accessTokenABC","token_type":"bearer","expires_in":86400,"refresh_token":"refreshTokenABC","scope":"service::user.auth.xboxlive.com::MBI_SSL"}}"#;
         let ts = TokenStore::deserialize_from_string(tokens_str).unwrap();
 
-        assert_eq!(ts.app_params.app_id, "00000000441cc96b");
+        assert_eq!(ts.app_params.client_id, "00000000441cc96b");
         assert_eq!(ts.app_params.title_id, Some("42".into()));
         assert_eq!(
             ts.app_params.auth_scopes.first().unwrap().as_str(),

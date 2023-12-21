@@ -506,14 +506,16 @@ impl ToString for DeviceType {
 /// Mandatory for XAL authentication flow
 #[derive(Debug, Serialize, Deserialize, PartialEq, Eq, Clone)]
 pub struct XalAppParameters {
-    /// App Id (For authorization/permission scope)
-    pub app_id: String,
-    /// App Title-Id (For TitleToken)
+    /// OAuth2 Client Id
+    pub client_id: String,
+    /// App Title-Id (Required for SISU auth flow, for TitleToken)
     pub title_id: Option<String>,
     /// Scopes
     pub auth_scopes: Vec<Scope>,
     /// Redirect Uri (For OAuth2 code response)
     pub redirect_uri: Option<RedirectUrl>,
+    /// OAuth2 Client Secret
+    pub client_secret: Option<String>,
 }
 
 /// Application parameter constants
@@ -544,52 +546,56 @@ pub mod app_params {
     /// Xbox Beta App
     pub fn APP_XBOX_BETA() -> XalAppParameters {
         XalAppParameters {
-            app_id: "000000004415494b".into(),
+            client_id: "000000004415494b".into(),
             title_id: Some("177887386".into()),
             auth_scopes: vec![Scope::new(Constants::SCOPE_SERVICE_USER_AUTH.to_string())],
             // Originally "ms-xal-000000004415494b://auth"
             redirect_uri: Some(
                 RedirectUrl::new(crate::Constants::OAUTH20_DESKTOP_REDIRECT_URL.into()).unwrap(),
             ),
+            client_secret: None,
         }
     }
 
     /// Xbox App
     pub fn APP_XBOX() -> XalAppParameters {
         XalAppParameters {
-            app_id: "000000004c12ae6f".into(),
+            client_id: "000000004c12ae6f".into(),
             title_id: Some("328178078".into()),
             auth_scopes: vec![Scope::new(Constants::SCOPE_SERVICE_USER_AUTH.to_string())],
             // Originally "ms-xal-000000004c12ae6f://auth"
             redirect_uri: Some(
                 RedirectUrl::new(crate::Constants::OAUTH20_DESKTOP_REDIRECT_URL.into()).unwrap(),
             ),
+            client_secret: None,
         }
     }
 
     /// Gamepass App
     pub fn APP_GAMEPASS() -> XalAppParameters {
         XalAppParameters {
-            app_id: "000000004c20a908".into(),
+            client_id: "000000004c20a908".into(),
             title_id: Some("1016898439".into()),
             auth_scopes: vec![Scope::new(Constants::SCOPE_SERVICE_USER_AUTH.to_string())],
             // Originally "ms-xal-000000004c20a908://auth"
             redirect_uri: Some(
                 RedirectUrl::new(crate::Constants::OAUTH20_DESKTOP_REDIRECT_URL.into()).unwrap(),
             ),
+            client_secret: None,
         }
     }
 
     /// Gamepass Beta App
     pub fn APP_GAMEPASS_BETA() -> XalAppParameters {
         XalAppParameters {
-            app_id: "000000004c20a908".into(),
+            client_id: "000000004c20a908".into(),
             title_id: Some("1016898439".into()),
             auth_scopes: vec![Scope::new(Constants::SCOPE_SERVICE_USER_AUTH.to_string())],
             // Originally "ms-xal-public-beta-000000004c20a908://auth"
             redirect_uri: Some(
                 RedirectUrl::new(crate::Constants::OAUTH20_DESKTOP_REDIRECT_URL.into()).unwrap(),
             ),
+            client_secret: None,
         }
     }
 
@@ -598,86 +604,92 @@ pub mod app_params {
     /// Uses default `oauth20_desktop.srf` redirect uri
     pub fn APP_FAMILY_SETTINGS() -> XalAppParameters {
         XalAppParameters {
-            app_id: "00000000482C8F49".into(),
+            client_id: "00000000482C8F49".into(),
             title_id: Some("1618633878".into()),
             auth_scopes: vec![Scope::new(Constants::SCOPE_SERVICE_USER_AUTH.to_string())],
             redirect_uri: Some(
                 RedirectUrl::new(crate::Constants::OAUTH20_DESKTOP_REDIRECT_URL.into()).unwrap(),
             ),
+            client_secret: None,
         }
     }
 
     /// Old Xbox App (non-sisu-flow)
     pub fn APP_OLD_XBOX_APP() -> XalAppParameters {
         XalAppParameters {
-            app_id: "0000000048093EE3".into(),
+            client_id: "0000000048093EE3".into(),
             title_id: None,
             auth_scopes: vec![Scope::new(Constants::SCOPE_SERVICE_USER_AUTH.to_string())],
             redirect_uri: Some(
                 RedirectUrl::new(crate::Constants::OAUTH20_DESKTOP_REDIRECT_URL.into()).unwrap(),
             ),
+            client_secret: None,
         }
     }
 
     /// Minecraft for Windows (JAVA)
     pub fn MC_JAVA_WIN32() -> XalAppParameters {
         XalAppParameters {
-            app_id: "00000000402b5328".into(),
+            client_id: "00000000402b5328".into(),
             title_id: None,
             auth_scopes: vec![Scope::new(Constants::SCOPE_SERVICE_USER_AUTH.to_string())],
             redirect_uri: Some(
                 RedirectUrl::new(crate::Constants::OAUTH20_DESKTOP_REDIRECT_URL.into()).unwrap(),
             ),
+            client_secret: None,
         }
     }
 
     /// Minecraft Bedrock (Nintendo Switch)
     pub fn MC_BEDROCK_SWITCH() -> XalAppParameters {
         XalAppParameters {
-            app_id: "00000000441cc96b".into(),
+            client_id: "00000000441cc96b".into(),
             title_id: Some("2047319603".into()),
             auth_scopes: vec![Scope::new(Constants::SCOPE_SERVICE_USER_AUTH.to_string())],
             redirect_uri: Some(
                 RedirectUrl::new(crate::Constants::OAUTH20_DESKTOP_REDIRECT_URL.into()).unwrap(),
             ),
+            client_secret: None,
         }
     }
 
     /// Minecraft Bedrock (Android)
     pub fn MC_BEDROCK_ANDROID() -> XalAppParameters {
         XalAppParameters {
-            app_id: "0000000048183522".into(),
+            client_id: "0000000048183522".into(),
             title_id: Some("1739947436".into()),
             auth_scopes: vec![Scope::new(Constants::SCOPE_SERVICE_USER_AUTH.to_string())],
             redirect_uri: Some(
                 RedirectUrl::new(crate::Constants::OAUTH20_DESKTOP_REDIRECT_URL.into()).unwrap(),
             ),
+            client_secret: None,
         }
     }
 
     /// Minecraft Bedrock (iOS)
     pub fn MC_BEDROCK_IOS() -> XalAppParameters {
         XalAppParameters {
-            app_id: "000000004c17c01a".into(),
+            client_id: "000000004c17c01a".into(),
             title_id: Some("1810924247".into()),
             auth_scopes: vec![Scope::new(Constants::SCOPE_SERVICE_USER_AUTH.to_string())],
             redirect_uri: Some(
                 RedirectUrl::new(crate::Constants::OAUTH20_DESKTOP_REDIRECT_URL.into()).unwrap(),
             ),
+            client_secret: None,
         }
     }
 
     /*
     /// Minecraft Bedrock (Win32))
     pub const MC_BEDROCK_WIN32: XalAppParameters = XalAppParameters {
-        app_id: "".into(),
+        client_id: "".into(),
         title_id: "896928775".into(),
         auth_scopes: vec![Scope::new(Constants::SCOPE_SERVICE_USER_AUTH.to_string())],
         redirect_uri: None,
     };
 
     pub const MC_BEDROCK_PLAYSTATION: XalAppParameters = XalAppParameters {
-        app_id: "".into(),
+        client_id: "".into(),
         title_id: "2044456598".into(),
         auth_scopes: vec![Scope::new(Constants::SCOPE_SERVICE_USER_AUTH.to_string())],
         redirect_uri: None,
