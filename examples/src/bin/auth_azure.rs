@@ -66,7 +66,7 @@ async fn main() -> Result<(), Error> {
     eprintln!("NOTE: --flow authorization-code required!");
     auth_main(
         XalAppParameters {
-            app_id: CLIENT_ID.into(),
+            client_id: CLIENT_ID.into(),
             title_id: None,
             auth_scopes: vec![
                 Scope::new("Xboxlive.signin".into()),

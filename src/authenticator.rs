@@ -409,7 +409,7 @@ impl XalAuthenticator {
     /// Refer to [`oauth2`] crate for it's usage
     pub fn oauth_client(&self) -> Result<BasicClient, Error> {
         let client = OAuthClient::new(
-            ClientId::new(self.app_params.app_id.to_string()),
+            ClientId::new(self.app_params.client_id.to_string()),
             self.app_params
                 .client_secret
                 .clone()
@@ -441,7 +441,7 @@ impl XalAuthenticator {
     /// # async fn demo_code() {
     /// let mut authenticator = XalAuthenticator::new(
     ///     XalAppParameters {
-    ///         app_id: "388ea51c-0b25-4029-aae2-17df49d23905".into(),
+    ///         client_id: "388ea51c-0b25-4029-aae2-17df49d23905".into(),
     ///         title_id: None,
     ///         auth_scopes: vec![
     ///             Scope::new("Xboxlive.signin".into()),
@@ -795,7 +795,7 @@ impl XalAuthenticator {
             ))?;
 
         let json_body = request::SisuAuthenticationRequest {
-            app_id: &self.app_params.app_id,
+            app_id: &self.app_params.client_id,
             title_id: &title_id,
             redirect_uri: self.app_params.redirect_uri.as_deref().ok_or(
                 Error::InvalidRedirectUrl("sisu_authenticate requires Redirect URL".to_string()),
@@ -896,7 +896,7 @@ impl XalAuthenticator {
     ) -> Result<response::SisuAuthorizationResponse, Error> {
         let json_body = request::SisuAuthorizationRequest {
             access_token: &format!("t={}", access_token.access_token().secret()),
-            app_id: &self.app_params.app_id,
+            app_id: &self.app_params.client_id,
             device_token: &device_token.token,
             sandbox: &self.sandbox_id.clone(),
             site_name: "user.auth.xboxlive.com",
