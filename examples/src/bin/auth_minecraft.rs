@@ -1,3 +1,5 @@
+//! Authenticating to Minecraft Bedrock as Nintendo-Switch-client
+//!
 use serde_json::json;
 use xal::{
     extensions::JsonExDeserializeMiddleware, oauth2::TokenResponse, AccessTokenPrefix,

@@ -1,3 +1,5 @@
+//! Sending a signed http request to XBL userpresence API
+//!
 use env_logger::Env;
 use xal::{
     cvlib::CorrelationVector,
@@ -39,8 +41,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .send()
         .await?
         .log()
+        .await?
+        .text()
         .await?;
 
-    println!("{:?}", userpresence);
+    println!("{userpresence}");
     Ok(())
 }

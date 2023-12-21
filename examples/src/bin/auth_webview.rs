@@ -109,9 +109,7 @@ async fn main() -> Result<(), Error> {
             .to_owned(),
     };
 
-    auth_main_default(AccessTokenPrefix::None, callback_handler)
-        .await
-        .ok();
+    auth_main_default(AccessTokenPrefix::None, callback_handler).await?;
 
     Ok(())
 }
