@@ -23,6 +23,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let xsts_token = token_store
         .authorization_token
         .ok_or(Error::GeneralError("No XSTS token was acquired".into()))?;
+    xsts_token.check_validity()?;
 
     // Send a http request
     // Request will get signed and MS-CV header populated

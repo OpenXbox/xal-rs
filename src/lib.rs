@@ -33,7 +33,7 @@
 //!         &mut authenticator,
 //!         CliCallbackHandler
 //!     ).await?;
-//! 
+//!
 //!     // User will be prompted on commandline to proceed with authentication
 //!
 //!     token_store.update_timestamp();
