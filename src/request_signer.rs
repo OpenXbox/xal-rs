@@ -119,9 +119,6 @@ impl TryFrom<reqwest::Request> for HttpMessageToSign {
         .to_string();
 
         let body = match *request.method() {
-            reqwest::Method::GET => {
-                vec![]
-            }
             reqwest::Method::POST => request
                 .body()
                 .ok_or(Error::InvalidRequest(
@@ -132,7 +129,9 @@ impl TryFrom<reqwest::Request> for HttpMessageToSign {
                     "Failed to convert HTTP body to bytes".to_string(),
                 ))?
                 .to_vec(),
-            _ => panic!("Unhandled HTTP method: {:?}", request.method()),
+            _ => {
+                vec![]
+            }
         };
 
         let path_and_query = {
