@@ -770,6 +770,15 @@ pub mod client_params {
             query_display: "touch".into(),
         }
     }
+
+    pub fn CLIENT_WINDOWS() -> XalClientParameters {
+        XalClientParameters {
+            user_agent: "XAL GRTS 2024.02.20240220.000".into(),
+            device_type: DeviceType::WIN32,
+            client_version: "10.0.22621.4196".into(),
+            query_display: "none".into()
+        }
+    }
 }
 
 impl Default for XalClientParameters {
