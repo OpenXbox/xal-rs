@@ -391,7 +391,7 @@ impl Flows {
 
     /// Shorthand for Windows Live authorization flow
     /// - Depending on the argument `implicit` the
-    /// methods `implicit grant` or `authorization code` are chosen
+    ///   methods `implicit grant` or `authorization code` are chosen
     ///
     /// # Examples
     ///

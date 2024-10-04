@@ -84,6 +84,7 @@ impl From<Vec<u8>> for XboxWebSignatureBytes {
     }
 }
 
+#[allow(clippy::to_string_trait_impl)]
 impl ToString for XboxWebSignatureBytes {
     fn to_string(&self) -> String {
         let bytes: Vec<u8> = self.into();

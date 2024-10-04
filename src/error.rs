@@ -51,7 +51,7 @@ pub enum Error {
         /// Target HTTP url
         url: String,
         /// HTTP headers
-        headers: http::HeaderMap,
+        headers: Box<http::HeaderMap>,
         /// HTTP message body
         body: String,
         /// [`serde_json`] error

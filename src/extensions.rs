@@ -172,7 +172,7 @@ impl JsonExDeserializeMiddleware for reqwest::Response {
         let res = serde_json::from_slice::<T>(&full).map_err(|e| Error::JsonHttpResponseError {
             status: http_status,
             url: url.to_string(),
-            headers,
+            headers: Box::new(headers),
             body: String::from_utf8_lossy(&full).to_string(),
             inner: e,
         });

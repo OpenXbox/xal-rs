@@ -446,6 +446,7 @@ pub enum AccessTokenPrefix {
     None,
 }
 
+#[allow(clippy::to_string_trait_impl)]
 impl ToString for AccessTokenPrefix {
     fn to_string(&self) -> String {
         let prefix = match self {
@@ -488,6 +489,7 @@ impl FromStr for DeviceType {
     }
 }
 
+#[allow(clippy::to_string_trait_impl)]
 impl ToString for DeviceType {
     fn to_string(&self) -> String {
         let str = match self {

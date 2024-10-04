@@ -48,6 +48,7 @@ impl From<TokenStore> for XalAuthenticator {
     }
 }
 
+#[allow(clippy::to_string_trait_impl)]
 impl ToString for TokenStore {
     fn to_string(&self) -> String {
         serde_json::to_string(&self).expect("Failed to serialize TokenStore")
@@ -142,6 +143,7 @@ impl TokenStore {
             .read(true)
             .write(true)
             .create(true)
+            .truncate(true)
             .open(filepath)?;
 
         file.rewind()?;
