@@ -36,6 +36,9 @@ name = "auth_minecraft"
 name = "auth_halo"
 
 [[bin]]
+name = "auth_titlehub"
+
+[[bin]]
 name = "xbl_signed_request"
 
 [[bin]]         
