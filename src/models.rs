@@ -771,6 +771,7 @@ pub mod client_params {
         }
     }
 
+    /// Windows Desktop Client
     pub fn CLIENT_WINDOWS() -> XalClientParameters {
         XalClientParameters {
             user_agent: "XAL GRTS 2024.02.20240220.000".into(),
