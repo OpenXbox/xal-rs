@@ -64,7 +64,7 @@ impl AuthPromptCallback for HttpCallbackHandler {
 #[tokio::main]
 async fn main() -> Result<(), Error> {
     eprintln!("NOTE: --flow authorization-code required!");
-    auth_main(
+    let ts = auth_main(
         XalAppParameters {
             client_id: CLIENT_ID.into(),
             title_id: None,
@@ -84,6 +84,8 @@ async fn main() -> Result<(), Error> {
         },
     )
     .await?;
+
+    println!("TokenStore: {ts:?}");
 
     Ok(())
 }
