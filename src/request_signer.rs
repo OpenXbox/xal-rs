@@ -782,7 +782,7 @@ mod test {
                 .unwrap()
                 .unwrap(),
             policy_1
-        );
+        )
     }
 
     #[test]
@@ -834,7 +834,7 @@ mod test {
         assert_eq!(
             &message_data,
             &hex!("f7d61b6f8d4dcd86da1aa8553f0ee7c15450811e7cd2759364e22f67d853ff50")
-        );
+        )
     }
 
     #[tokio::test]
@@ -862,7 +862,7 @@ mod test {
         let signature = request.headers().get("Signature");
 
         assert!(signature.is_some());
-        assert!(signer.verify(request).await.is_ok());
+        assert!(signer.verify(request).await.is_ok())
     }
 
     #[test]
@@ -887,7 +887,7 @@ mod test {
 
         assert!(signer
             .verify_message(signature, &request, MAX_BODY_BYTES)
-            .is_ok());
+            .is_ok())
     }
 
     #[tokio::test]
@@ -900,7 +900,7 @@ mod test {
             .expect("Failed to sign HTTP GET request")
             .build();
 
-        assert!(request.is_ok());
+        assert!(request.is_ok())
     }
 
     #[tokio::test]
@@ -914,6 +914,6 @@ mod test {
             .expect("Failed to sign HTTP POST request")
             .build();
 
-        assert!(request.is_ok());
+        assert!(request.is_ok())
     }
 }
