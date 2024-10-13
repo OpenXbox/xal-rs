@@ -4,6 +4,7 @@ use std::collections::HashMap;
 use std::io::Write;
 use std::path::PathBuf;
 
+use log::{info, warn, debug, trace};
 use async_trait::async_trait;
 use reqwest::Url;
 use serde::Deserialize;
@@ -32,7 +33,7 @@ pub struct PagingInfo {
 #[serde(rename_all = "camelCase")]
 pub struct BlobMetadata {
     pub file_name: String,
-    pub display_name: String,
+    pub display_name: Option<String>,
     pub etag: String,
     pub client_file_time: String,
     pub size: usize
@@ -70,10 +71,10 @@ impl AuthPromptCallback for HttpCallbackHandler {
         println!("{prompt}\n");
 
         let listener = TcpListener::bind(&self.bind_host).await?;
-        println!("HTTP Server listening, waiting for connection...");
+        debug!("HTTP Server listening, waiting for connection...");
 
         let (mut socket, addr) = listener.accept().await?;
-        println!("Connection received from {addr:?}");
+        debug!("Connection received from {addr:?}");
 
         let mut buf = [0u8; 1024];
 
@@ -84,16 +85,28 @@ impl AuthPromptCallback for HttpCallbackHandler {
         socket.write_all(b"HTTP/1.1 200 OK\n\r\n\r").await?;
 
         let http_req = std::str::from_utf8(&buf)?;
-        println!("HTTP REQ: {http_req}");
+        trace!("HTTP REQ: {http_req}");
 
         let path = http_req.split(' ').nth(1).unwrap();
-        println!("Path: {path}");
+        debug!("Path: {path}");
 
         Ok(Some(Url::parse(&format!(
             "{}{}",
             self.redirect_url_base, path
         ))?))
     }
+}
+
+pub fn assemble_filepath(root_path: &PathBuf, path: &str) -> PathBuf {
+    let modified_path = path
+        // Replace separator with platform-specific separator
+        .replace("/", std::path::MAIN_SEPARATOR_STR)
+        // Strip ,savedgame suffix
+        .replace(",savedgame", "")
+        .replace("X", ".")
+        .replace("E", "-");
+
+    root_path.join(modified_path)
 }
 
 #[tokio::main]
@@ -171,11 +184,14 @@ async fn main() -> Result<(), Error> {
         .json_ex::<BlobsResponse>()
         .await?;
 
-    println!("metadata: {metadata:?}");
+    trace!("metadata: {metadata:?}");
 
-    println!("Found {} blobs", metadata.blobs.len());
+    info!("Found {} blobs", metadata.blobs.len());
     for blob in metadata.blobs {
-        println!("Fetching blob: {blob:?}");
+        info!("- Fetching {} ({} bytes)", &blob.file_name, blob.size);
+
+        let filepath = assemble_filepath(&target_dir, &blob.file_name);
+
         let atoms = client
             .get(format!("https://titlestorage.xboxlive.com/connectedstorage/users/xuid({xuid})/scids/{scid}/{}", blob.file_name))
             .header("x-xbl-contract-version", "107")
@@ -194,13 +210,13 @@ async fn main() -> Result<(), Error> {
             .json_ex::<SavegameAtoms>()
             .await?;
 
-        println!("{atoms:?}");
+        trace!("{atoms:?}");
 
-        println!("* Found {} atoms", atoms.atoms.len());
-        for (key, value) in atoms.atoms.iter() {
-            println!("Fetching atom {key} -> {value}");
+        debug!("* Found {} atoms", atoms.atoms.len());
+        if let Some(atom_guid) = atoms.atoms.get("Data") {
+            debug!("Fetching atom {atom_guid}");
             let filedata = client
-                .get(format!("https://titlestorage.xboxlive.com/connectedstorage/users/xuid({xuid})/scids/{scid}/{value}"))
+                .get(format!("https://titlestorage.xboxlive.com/connectedstorage/users/xuid({xuid})/scids/{scid}/{atom_guid}"))
                 .header("x-xbl-contract-version", "107")
                 .header("x-xbl-pfn", pfn)
                 .header("Accept-Language", "en-US")
@@ -217,9 +233,16 @@ async fn main() -> Result<(), Error> {
                 .bytes()
                 .await?;
 
-            let filepath = target_dir.join(&value);
+            if let Some(parent) = filepath.parent() {
+                if !parent.exists() {
+                    std::fs::create_dir_all(&parent)?;
+                }
+            }
+
             let mut filehandle = std::fs::File::create(filepath)?;
             filehandle.write_all(&filedata)?;
+        } else {
+            warn!("No atom with 'Data' found for blob {}", blob.file_name);
         }
     }
     Ok(())
