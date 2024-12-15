@@ -333,9 +333,6 @@ impl XalAuthenticator {
     /// This method initializes an instance of the XAL Authenticator with the specified
     /// `app_params`, `client_params`, and `sandbox_id`.
     ///
-    /// The `device_id` parameter can be provided to use a specific device ID, or it can be left as
-    /// `None` to generate a new device ID.
-    ///
     /// See constants in [`crate::models::app_params`] for [`crate::XalAppParameters`] and
     /// [`crate::models::client_params`] for [`crate::XalClientParameters`].
     ///
@@ -368,6 +365,42 @@ impl XalAuthenticator {
             client: reqwest::Client::new(),
             request_signer: request_signer::RequestSigner::default(),
             sandbox_id: sandbox_id.to_owned(),
+        }
+    }
+
+    /// Create a new instance of the XAL Authenticator with explicit Device Id.
+    ///
+    /// See `new()` method.
+    ///
+    /// # Examples
+    ///
+    /// Instantiate explicitly with app/client parameters and device id
+    ///
+    /// ```
+    /// use xal::{XalAuthenticator, app_params, client_params};
+    /// let authenticator = XalAuthenticator::with_device_id(
+    ///     app_params::APP_GAMEPASS_BETA(),
+    ///     client_params::CLIENT_ANDROID(),
+    ///     "RETAIL".into(),
+    ///     uuid::uuid!("dc1183d0-a9f8-4c3f-a2a9-83706023791e")
+    /// );
+    /// ```
+    ///
+    /// # Notes
+    ///
+    /// If you don't have specific needs for client parameters, use [`crate::XalAuthenticator::default`]
+    pub fn with_device_id(
+        app_params: XalAppParameters,
+        client_params: XalClientParameters,
+        sandbox_id: String,
+        device_id: uuid::Uuid,
+    ) -> Self {
+        Self {
+            app_params,
+            client_params,
+            device_id,
+            sandbox_id,
+            ..Default::default()
         }
     }
 
