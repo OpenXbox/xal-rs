@@ -17,7 +17,7 @@ Check out [xal-examples](./examples/)
 
 ## Minimum supported Rust version
 
-This crate requires at least Rust 1.70 (stable).
+This crate requires at least Rust 1.74 (stable).
 
 ## Disclaimer
 
