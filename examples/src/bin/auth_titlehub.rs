@@ -116,6 +116,16 @@ pub fn assemble_filepath(root_path: &Path, atom_type: &str, path: &str) -> PathB
         }
     };
 
+    let atom_type = {
+        if let Some(stripped) = atom_type.strip_prefix("/") {
+            // Remove leading path seperator
+            stripped.to_string()
+        }
+        else {
+            atom_type.to_string()
+        }
+    };
+
     let mut new_path = root_path.to_path_buf();
     new_path.push(atom_type);
     new_path.push(modified_path);
@@ -279,6 +289,14 @@ mod tests
             "/root/filesystem/Data/save-container.bin",
             assemble_filepath(&PathBuf::from_str("/root/filesystem").unwrap(), "Data", "saveEcontainerXbin,savedgame").as_os_str()
         );
+        assert_eq!(
+            "/root/filesystem/Custom Input Config.json/save-container.bin",
+            assemble_filepath(&PathBuf::from_str("/root/filesystem").unwrap(), "/Custom Input Config.json", "saveEcontainerXbin,savedgame").as_os_str()
+        );
+        assert_eq!(
+            "/root/filesystem/Custom Input Config.json/save-container.bin",
+            assemble_filepath(&PathBuf::from_str("/root/filesystem").unwrap(), "Custom Input Config.json", "saveEcontainerXbin,savedgame").as_os_str()
+        );
     }
 
     #[cfg(target_os = "windows")]
@@ -291,6 +309,14 @@ mod tests
         assert_eq!(
             "C:\\some_dir\\Data\\save-container.bin",
             assemble_filepath(&PathBuf::from_str("C:\\some_dir\\").unwrap(), "Data", "saveEcontainerXbin,savedgame").as_os_str()
+        );
+        assert_eq!(
+            "C:\\some_dir\\Custom Input Config.json\\save-container.bin",
+            assemble_filepath(&PathBuf::from_str("/root/filesystem").unwrap(), "/Custom Input Config.json", "saveEcontainerXbin,savedgame").as_os_str()
+        );
+        assert_eq!(
+            "C:\\some_dir\\Custom Input Config.json\\save-container.bin",
+            assemble_filepath(&PathBuf::from_str("/root/filesystem").unwrap(), "Custom Input Config.json", "saveEcontainerXbin,savedgame").as_os_str()
         );
     }
 
