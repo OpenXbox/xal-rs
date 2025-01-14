@@ -365,9 +365,7 @@ impl RequestSigner {
             &request.authorization,
             &request.body,
             max_body_bytes,
-        )
-        .map_err(std::convert::Into::into)
-    }
+        )}
 
     /// Create signature from low-level parts
     #[allow(clippy::too_many_arguments)]

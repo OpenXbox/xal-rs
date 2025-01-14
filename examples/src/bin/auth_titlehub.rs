@@ -1,6 +1,6 @@
 //! Download savegames for a specific title
 //!
-use std::collections::HashMap;
+use std::{collections::HashMap, path::Path};
 use std::io::Write;
 use std::path::PathBuf;
 
@@ -52,8 +52,8 @@ pub struct SavegameAtoms {
 }
 
 // Replace with your own Azure Client parameters
-const CLIENT_ID: &'static str = "388ea51c-0b25-4029-aae2-17df49d23905";
-const REDIRECT_URL: &'static str = "http://localhost:8080/auth/callback";
+const CLIENT_ID: &str = "388ea51c-0b25-4029-aae2-17df49d23905";
+const REDIRECT_URL: &str = "http://localhost:8080/auth/callback";
 const CLIENT_SECRET: Option<&'static str> = None;
 
 pub struct HttpCallbackHandler {
@@ -97,7 +97,7 @@ impl AuthPromptCallback for HttpCallbackHandler {
     }
 }
 
-pub fn assemble_filepath(root_path: &PathBuf, atom_type: &str, path: &str) -> PathBuf {
+pub fn assemble_filepath(root_path: &Path, atom_type: &str, path: &str) -> PathBuf {
     let modified_path = {
         let tmp = path
             // Replace separator with platform-specific separator
@@ -107,9 +107,9 @@ pub fn assemble_filepath(root_path: &PathBuf, atom_type: &str, path: &str) -> Pa
             .replace("X", ".")
             .replace("E", "-");
 
-        if tmp.starts_with(std::path::MAIN_SEPARATOR_STR) {
+        if let Some(stripped) = tmp.strip_prefix(std::path::MAIN_SEPARATOR_STR) {
             // Remove leading path seperator
-            tmp[1..].to_string()
+            stripped.to_string()
         }
         else {
             tmp
@@ -173,7 +173,7 @@ async fn main() -> Result<(), Error> {
     let scid = "05c20100-6e60-45d5-878a-4903149e11ae";
 
     let mut target_dir = PathBuf::new();
-    target_dir.push(&pfn);
+    target_dir.push(pfn);
     target_dir.push(&xuid);
 
     if !target_dir.exists() {
@@ -248,7 +248,7 @@ async fn main() -> Result<(), Error> {
 
             if let Some(parent) = filepath.parent() {
                 if !parent.exists() {
-                    std::fs::create_dir_all(&parent)?;
+                    std::fs::create_dir_all(parent)?;
                 }
             }
 
