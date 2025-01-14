@@ -943,9 +943,7 @@ impl XalAuthenticator {
             .send()
             .await?
             .json_ex::<response::SisuAuthorizationResponse>()
-            .await
-            .map_err(std::convert::Into::into)
-    }
+            .await}
 
     /// Requests a Xbox Live Device Token from the Xbox Live authentication service.
     ///
@@ -1013,9 +1011,7 @@ impl XalAuthenticator {
             .send()
             .await?
             .json_ex::<response::DeviceToken>()
-            .await
-            .map_err(std::convert::Into::into)
-    }
+            .await}
 
     /// Retrieves a Xbox User Token for a specified Access Token.
     ///
@@ -1090,9 +1086,7 @@ impl XalAuthenticator {
             .log()
             .await?
             .json_ex::<response::UserToken>()
-            .await
-            .map_err(std::convert::Into::into)
-    }
+            .await}
 
     /// Retrieves a Title Token for a specified Access Token and Device Token.
     ///
@@ -1170,9 +1164,7 @@ impl XalAuthenticator {
             .log()
             .await?
             .json_ex::<response::TitleToken>()
-            .await
-            .map_err(std::convert::Into::into)
-    }
+            .await}
 
     /// Authenticates with the Xbox Live service and retrieves an XSTS token.
     ///
@@ -1275,9 +1267,7 @@ impl XalAuthenticator {
             .log()
             .await?
             .json_ex::<response::XSTSToken>()
-            .await
-            .map_err(std::convert::Into::into)
-    }
+            .await}
 }
 
 #[cfg(test)]

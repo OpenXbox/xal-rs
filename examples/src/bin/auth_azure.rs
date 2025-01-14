@@ -16,8 +16,8 @@ use xal::{
 use xal_examples::auth_main;
 
 // Replace with your own Azure Client parameters
-const CLIENT_ID: &'static str = "388ea51c-0b25-4029-aae2-17df49d23905";
-const REDIRECT_URL: &'static str = "http://localhost:8080/auth/callback";
+const CLIENT_ID: &str = "388ea51c-0b25-4029-aae2-17df49d23905";
+const REDIRECT_URL: &str = "http://localhost:8080/auth/callback";
 const CLIENT_SECRET: Option<&'static str> = None;
 
 pub struct HttpCallbackHandler {

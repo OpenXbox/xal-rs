@@ -1,10 +1,10 @@
 //! Download savegames for a specific title
 //!
-use std::collections::HashMap;
+use std::{collections::HashMap, path::Path};
 use std::io::Write;
 use std::path::PathBuf;
 
-use log::{info, warn, debug, trace};
+use log::{info, debug, trace};
 use async_trait::async_trait;
 use reqwest::Url;
 use serde::Deserialize;
@@ -52,8 +52,8 @@ pub struct SavegameAtoms {
 }
 
 // Replace with your own Azure Client parameters
-const CLIENT_ID: &'static str = "388ea51c-0b25-4029-aae2-17df49d23905";
-const REDIRECT_URL: &'static str = "http://localhost:8080/auth/callback";
+const CLIENT_ID: &str = "388ea51c-0b25-4029-aae2-17df49d23905";
+const REDIRECT_URL: &str = "http://localhost:8080/auth/callback";
 const CLIENT_SECRET: Option<&'static str> = None;
 
 pub struct HttpCallbackHandler {
@@ -97,16 +97,30 @@ impl AuthPromptCallback for HttpCallbackHandler {
     }
 }
 
-pub fn assemble_filepath(root_path: &PathBuf, path: &str) -> PathBuf {
-    let modified_path = path
-        // Replace separator with platform-specific separator
-        .replace("/", std::path::MAIN_SEPARATOR_STR)
-        // Strip ,savedgame suffix
-        .replace(",savedgame", "")
-        .replace("X", ".")
-        .replace("E", "-");
+pub fn assemble_filepath(root_path: &Path, atom_type: &str, path: &str) -> PathBuf {
+    let modified_path = {
+        let tmp = path
+            // Replace separator with platform-specific separator
+            .replace("/", std::path::MAIN_SEPARATOR_STR)
+            // Strip ,savedgame suffix
+            .replace(",savedgame", "")
+            .replace("X", ".")
+            .replace("E", "-");
 
-    root_path.join(modified_path)
+        if let Some(stripped) = tmp.strip_prefix(std::path::MAIN_SEPARATOR_STR) {
+            // Remove leading path seperator
+            stripped.to_string()
+        }
+        else {
+            tmp
+        }
+    };
+
+    let mut new_path = root_path.to_path_buf();
+    new_path.push(atom_type);
+    new_path.push(modified_path);
+
+    new_path
 }
 
 #[tokio::main]
@@ -155,11 +169,11 @@ async fn main() -> Result<(), Error> {
 
     let client = reqwest::Client::new();
 
-    let pfn = "Microsoft.ProjectSpark-Dakota_8wekyb3d8bbwe";
-    let scid = "d3d00100-7976-472f-a3f7-bc1760d19e14";
+    let pfn = "Microsoft.ArthurProduct_8wekyb3d8bbwe";
+    let scid = "05c20100-6e60-45d5-878a-4903149e11ae";
 
     let mut target_dir = PathBuf::new();
-    target_dir.push(&pfn);
+    target_dir.push(pfn);
     target_dir.push(&xuid);
 
     if !target_dir.exists() {
@@ -190,8 +204,6 @@ async fn main() -> Result<(), Error> {
     for blob in metadata.blobs {
         info!("- Fetching {} ({} bytes)", &blob.file_name, blob.size);
 
-        let filepath = assemble_filepath(&target_dir, &blob.file_name);
-
         let atoms = client
             .get(format!("https://titlestorage.xboxlive.com/connectedstorage/users/xuid({xuid})/scids/{scid}/{}", blob.file_name))
             .header("x-xbl-contract-version", "107")
@@ -213,8 +225,9 @@ async fn main() -> Result<(), Error> {
         trace!("{atoms:?}");
 
         debug!("* Found {} atoms", atoms.atoms.len());
-        if let Some(atom_guid) = atoms.atoms.get("Data") {
-            debug!("Fetching atom {atom_guid}");
+        for (atom_type, atom_guid) in atoms.atoms.iter() {
+            let filepath = assemble_filepath(&target_dir, atom_type, &blob.file_name);
+            debug!("Fetching atom {atom_guid} (Type: {atom_type})");
             let filedata = client
                 .get(format!("https://titlestorage.xboxlive.com/connectedstorage/users/xuid({xuid})/scids/{scid}/{atom_guid}"))
                 .header("x-xbl-contract-version", "107")
@@ -235,14 +248,12 @@ async fn main() -> Result<(), Error> {
 
             if let Some(parent) = filepath.parent() {
                 if !parent.exists() {
-                    std::fs::create_dir_all(&parent)?;
+                    std::fs::create_dir_all(parent)?;
                 }
             }
 
             let mut filehandle = std::fs::File::create(filepath)?;
             filehandle.write_all(&filedata)?;
-        } else {
-            warn!("No atom with 'Data' found for blob {}", blob.file_name);
         }
     }
     Ok(())
@@ -252,7 +263,36 @@ async fn main() -> Result<(), Error> {
 #[cfg(test)]
 mod tests
 {
+    use std::str::FromStr;
+
     use super::*;
+
+    //#[cfg(target_os="windows")]
+    #[cfg(not(target_os = "windows"))]
+    #[test]
+    fn test_assemble_unix() {
+        assert_eq!(
+            "/root/filesystem/Data/save-container.bin",
+            assemble_filepath(&PathBuf::from_str("/root/filesystem").unwrap(), "Data", "/saveEcontainerXbin,savedgame").as_os_str()
+        );
+        assert_eq!(
+            "/root/filesystem/Data/save-container.bin",
+            assemble_filepath(&PathBuf::from_str("/root/filesystem").unwrap(), "Data", "saveEcontainerXbin,savedgame").as_os_str()
+        );
+    }
+
+    #[cfg(target_os = "windows")]
+    #[test]
+    fn test_assemble_filepath_windows() {
+        assert_eq!(
+            "C:\\some_dir\\Data\\save-container.bin",
+            assemble_filepath(&PathBuf::from_str("C:\\some_dir\\").unwrap(), "Data", "/saveEcontainerXbin,savedgame").as_os_str()
+        );
+        assert_eq!(
+            "C:\\some_dir\\Data\\save-container.bin",
+            assemble_filepath(&PathBuf::from_str("C:\\some_dir\\").unwrap(), "Data", "saveEcontainerXbin,savedgame").as_os_str()
+        );
+    }
 
     #[test]
     fn deserialize_blob_response() {
