@@ -212,7 +212,7 @@ async fn main() -> Result<(), Error> {
 
     info!("Found {} blobs", metadata.blobs.len());
     for blob in metadata.blobs {
-        info!("- Fetching {} ({} bytes)", &blob.file_name, blob.size);
+        info!("- Fetching {} ({} bytes)", blob.file_name, blob.size);
 
         let atoms = client
             .get(format!("https://titlestorage.xboxlive.com/connectedstorage/users/xuid({xuid})/scids/{scid}/{}", blob.file_name))

@@ -445,7 +445,7 @@ impl Flows {
             trace!("Parsing (authorization code) redirect URI");
             let authorization_code =
                 XalAuthenticator::parse_authorization_code_response(&redirect_url, Some(&state))?;
-            debug!("Authorization Code: {:?}", &authorization_code);
+            debug!("Authorization Code: {:?}", authorization_code);
 
             trace!("Getting Windows Live tokens (exchange code)");
             authenticator
@@ -530,12 +530,12 @@ impl Flows {
         let authorization_code =
             XalAuthenticator::parse_authorization_code_response(&redirect_url, Some(&state))?;
 
-        debug!("Authorization Code: {:?}", &authorization_code);
+        debug!("Authorization Code: {:?}", authorization_code);
         trace!("Getting Windows Live tokens (exchange code)");
         let live_tokens = authenticator
             .exchange_code_for_token(authorization_code, Some(code_verifier))
             .await?;
-        debug!("Windows live tokens={:?}", &live_tokens);
+        debug!("Windows live tokens={:?}", live_tokens);
 
         trace!("Getting Sisu authorization response");
         let sisu_resp = authenticator
@@ -628,7 +628,7 @@ impl Flows {
         access_token_prefix: AccessTokenPrefix,
         request_title_token: bool,
     ) -> Result<TokenStore, Error> {
-        debug!("Windows live tokens={:?}", &live_tokens);
+        debug!("Windows live tokens={:?}", live_tokens);
         trace!("Getting device token");
         let device_token = authenticator.get_device_token().await?;
         debug!("Device token={:?}", device_token);
@@ -716,7 +716,7 @@ impl Flows {
         authenticator: &mut XalAuthenticator,
         live_tokens: WindowsLiveTokens,
     ) -> Result<TokenStore, Error> {
-        debug!("Windows live tokens={:?}", &live_tokens);
+        debug!("Windows live tokens={:?}", live_tokens);
         trace!("Getting device token");
         let device_token = authenticator.get_device_token().await?;
         debug!("Device token={:?}", device_token);
