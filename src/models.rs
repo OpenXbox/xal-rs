@@ -45,8 +45,8 @@ impl ProofKey {
             alg: "ES256".into(),
             u: "sig".into(),
             kty: "EC".into(),
-            x: base64ct::Base64UrlUnpadded::encode_string(point.x().unwrap().as_slice()),
-            y: base64ct::Base64UrlUnpadded::encode_string(point.y().unwrap().as_slice()),
+            x: base64ct::Base64UrlUnpadded::encode_string(point.x().unwrap().as_ref()),
+            y: base64ct::Base64UrlUnpadded::encode_string(point.y().unwrap().as_ref()),
         }
     }
 }

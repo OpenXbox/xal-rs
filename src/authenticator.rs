@@ -177,7 +177,7 @@ impl XalAuthenticator {
     ///
     /// * `redirect_url` - The full url of the redirect endpoint containing the code= query parameter.
     /// * `expected_state` - (Optional) The expected state that should match the state returned by the server.
-    ///                      If the states do not match, an error will be returned.
+    ///   If the states do not match, an error will be returned.
     ///
     /// # Returns
     ///
